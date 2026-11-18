@@ -30,7 +30,7 @@ const NAV = [
     { to: "/painel/trajetorias", label: "Trajetórias", icon: Route, roles: ["organizer", "admin"] },
     { to: "/painel/evals", label: "Evals", icon: FlaskConical, roles: ["organizer", "admin"] },
     { to: "/painel/agentes", label: "Arquitetura", icon: Bot, roles: ["organizer", "admin"] },
-    { to: "/painel/auditoria", label: "Auditoria", icon: Activity, roles: ["organizer", "admin"] },
+    { to: "/painel/auditoria", label: "Auditoria (Logs)", icon: Activity, roles: ["organizer", "admin"] },
   ]},
 ];
 
