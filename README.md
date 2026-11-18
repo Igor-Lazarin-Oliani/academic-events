@@ -3,6 +3,7 @@
 Plataforma de eventos acadêmicos (semanas acadêmicas, simpósios, hackathons) com **agentes de IA** que atendem participantes e ajudam a comissão organizadora a resolver imprevistos, sempre com **evidência**, **limites de autonomia** e **aprovação humana**.
 
 > Trabalho de **Técnicas Avançadas em Desenvolvimento de Software** (TADS · UFMS · 2026-2), Prof. Vitor Mesaque Alves de Lima.
+
 > **Autor:** [Igor Lazarin Oliani](https://github.com/Igor-Lazarin-Oliani) · Todos os dados são fictícios.
 
 ![Assistente do participante propondo uma troca de minicurso com confirmação](docs/img/e2e-chat-done.png)
