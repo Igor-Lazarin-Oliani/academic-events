@@ -1,0 +1,11 @@
+.env
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+node_modules/
+dist/
+evals/.cache/
+*.log
+# PDFs originais da raiz (as cópias ficam em docs/referencias)
+/*.pdf

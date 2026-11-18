@@ -1,0 +1,53 @@
+name: academic-events
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: academic
+      POSTGRES_PASSWORD: academic_pass
+      POSTGRES_DB: academic_events
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U academic -d academic_events"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql+psycopg://academic:academic_pass@db:5432/academic_events
+      TEST_DATABASE_URL: postgresql+psycopg://academic:academic_pass@db:5432/academic_events_test
+      SEED_ON_STARTUP: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - ./evals:/evals
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request;urllib.request.urlopen('http://localhost:8000/health')\""]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+
+volumes:
+  db-data:

@@ -1,0 +1,11 @@
+{
+  "name": "academic-events-e2e",
+  "private": true,
+  "description": "Testes ponta a ponta pela UI (Playwright). Requer o ambiente no ar (docker compose up) e um banco recém-semeado.",
+  "scripts": {
+    "setup": "playwright install chromium",
+    "screens": "node screens.js",
+    "flows": "node flows.js"
+  },
+  "dependencies": { "playwright": "1.49.1" }
+}
