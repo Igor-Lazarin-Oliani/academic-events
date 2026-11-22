@@ -105,6 +105,12 @@ class SessionIn(BaseModel):
     speaker_ids: list[str] = []
 
 
+class EventCreateIn(EventIn):
+    """Evento com a programação inicial: tudo é criado numa única transação."""
+
+    sessions: list[SessionIn] = Field(default=[], max_length=200)
+
+
 class SessionUpdateIn(BaseModel):
     title: str | None = None
     description: str | None = None

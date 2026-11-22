@@ -6,7 +6,7 @@ Responde ao checklist da aula ("antes de chamar algo de agente"): objetivo, deci
 
 O sistema tem **3 agentes**, usados só onde há linguagem livre ou investigação. O que é regra fixa (vagas, inscrição, check-in, execução de mudanças) é código determinístico.
 
-**1. Assistente do Participante** (chat "Pergunte ao assistente", no portal). Substitui a fila de dúvidas no WhatsApp.
+**1. Assistente do Participante** (chat "Pergunte ao assistente", no portal). Centraliza as dúvidas dos participantes no chat interno da aplicação.
 - Responde com base no regulamento, no FAQ, na programação e nos ingressos **do próprio usuário**, e **cita a fonte** (ex.: "Regulamento §4.2").
 - Diz **"não sei"** quando a informação não existe e oferece encaminhar à comissão.
 - Diz **"não posso"** para ingressos de outras pessoas, mudanças na programação e instruções maliciosas.

@@ -8,8 +8,8 @@ from app.modules.auth.models import User
 from app.modules.events import service
 from app.modules.events.models import Room, Session, SessionStatus, Speaker
 from app.modules.events.schemas import (
+    EventCreateIn,
     EventDetailOut,
-    EventIn,
     EventOut,
     EventSummaryOut,
     EventUpdateIn,
@@ -57,7 +57,8 @@ def get_session(session_id: str, db: DbSession = Depends(get_db)):
 
 
 @router.post("/events", response_model=EventOut, status_code=201)
-def create_event(body: EventIn, user: User = Depends(manager), db: DbSession = Depends(get_db)):
+def create_event(body: EventCreateIn, user: User = Depends(require_roles("admin")), db: DbSession = Depends(get_db)):
+    """Só administradores criam eventos; a comissão gerencia os eventos que lhe são atribuídos."""
     event = service.create_event(db, body, user)
     db.commit()
     return event

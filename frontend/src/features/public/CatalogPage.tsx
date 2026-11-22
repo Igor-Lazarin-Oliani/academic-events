@@ -21,7 +21,7 @@ export function CatalogPage() {
         <div className="relative mx-auto grid max-w-6xl gap-10 px-4 py-14 md:grid-cols-[1.2fr_1fr] md:py-20">
           <div>
             <Badge tone="brand"><Sparkles className="h-3 w-3" />Com assistente de IA que cita as fontes</Badge>
-            <h1 className="mt-4 text-4xl font-extrabold leading-tight sm:text-5xl">Eventos acadêmicos sem fila de dúvidas no WhatsApp.</h1>
+            <h1 className="mt-4 text-4xl font-extrabold leading-tight sm:text-5xl">Eventos acadêmicos sem fila de dúvidas.</h1>
             <p className="mt-4 max-w-xl text-lg text-subtle">Inscreva-se nas sessões, receba seu ingresso digital e tire dúvidas com um assistente que responde pelo regulamento oficial. A comissão resolve imprevistos com um agente que investiga o impacto e propõe o plano.</p>
             <div className="mt-6 flex flex-wrap gap-3 text-sm text-subtle">
               <span className="flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-ok" />Nenhuma ação sem sua confirmação</span>

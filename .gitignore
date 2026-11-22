@@ -9,3 +9,6 @@ evals/.cache/
 *.log
 # PDFs originais da raiz (as cópias ficam em docs/referencias)
 /*.pdf
+# Documentos internos (não versionar)
+docs/roteiro-demo.md
+docs/prompt.md

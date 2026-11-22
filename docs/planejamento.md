@@ -104,7 +104,7 @@ A ideia passa a ser válida quando mudamos **o problema** de "vender ingressos" 
 
 | Dor real | Por que um workflow fixo não basta | Quem resolve |
 |---|---|---|
-| A comissão recebe dezenas de dúvidas repetidas por WhatsApp e e-mail ("tem certificado?", "posso trocar de minicurso?", "a palestra mudou de sala?") | A pergunta chega em linguagem livre, a resposta depende do regulamento **e** dos dados do próprio participante, e às vezes vira uma ação | Assistente do Participante |
+| A comissão recebe dezenas de dúvidas repetidas, respondidas uma a uma pela equipe ("tem certificado?", "posso trocar de minicurso?", "a palestra mudou de sala?") | A pergunta chega em linguagem livre, a resposta depende do regulamento **e** dos dados do próprio participante, e às vezes vira uma ação | Assistente do Participante |
 | Mudanças de última hora (palestrante cancela, sala sem energia, chuva no evento externo) | É preciso **investigar** quem é afetado, o próximo passo depende do que foi descoberto (há sala livre? outro horário? alguém na lista de espera?) e o resultado é um plano, não uma regra | Agente de Operações |
 | Comunicados com dados errados (sala ou horário trocado) geram mais dúvidas | Um texto gerado precisa ser **verificado contra os fatos** antes de sair | Agente Revisor |
 | Lista de espera e remanejamento quando uma vaga é liberada | **Determinístico**: fica no código, sem agente | Serviço de domínio |
@@ -497,7 +497,6 @@ tads-eventos-agentes/
 ├── docker-compose.yml             # postgres(+pgvector) · backend · frontend · mailpit [· ollama]
 ├── .env.example
 ├── docs/
-│   ├── prompt.md                  # contexto do pedido (não perder o fio)
 │   ├── planejamento.md            # este arquivo
 │   ├── arquitetura.md             # diagramas e responsabilidades
 │   ├── agentes.md                 # ficha de cada agente: objetivo, tools, decide, parada

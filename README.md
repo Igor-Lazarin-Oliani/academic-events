@@ -33,7 +33,7 @@ docker compose down -v && docker compose up -d   # reset do banco de demonstraç
 
 Comissões organizadoras de eventos acadêmicos são **pequenas, voluntárias e rotativas**. Elas passam a semana do evento:
 
-1. respondendo às **mesmas dúvidas** no WhatsApp ("tem certificado?", "posso trocar de minicurso?", "mudou de sala?");
+1. respondendo às **mesmas dúvidas** repetidas vezes, uma a uma ("tem certificado?", "posso trocar de minicurso?", "mudou de sala?");
 2. apagando **incêndios de última hora** (palestrante cancelou, sala sem energia) sem saber direito **quem é afetado**;
 3. mandando **comunicados com erro** (horário ou sala trocados), o que gera mais dúvidas.
 
@@ -112,7 +112,7 @@ Diagramas de sequência, do grafo de estados e da governança em [docs/arquitetu
 | **Contexto, tools e segurança (15%)** | 13 tools tipadas com nível L0–L3; **Tool Gateway** ("o LLM solicita, o sistema autoriza e registra"); contrato de contexto JSON; RAG lexical com **proveniência e versão**; **grafo de impacto**; escopo no SQL; guardrail de injeção; LGPD | [docs/contratos-tools.md](docs/contratos-tools.md), telas **Base de conhecimento** e **Grafo** |
 | **Qualidade da solução (20%)** | Regras do projeto anterior (reserva atômica, idempotência) + troca atômica, conflito, limite; dry-run e execução tudo ou nada; timeout, retry, **fallback de modelos**, **circuit breaker**, budget, tool terminal; **modo degradado**; frontend de produto | [docs/decisoes.md](docs/decisoes.md) (D1–D19) |
 | **Testes, evals e observabilidade (15%)** | 58 testes pytest (incl. concorrência real e agentes com `FakeModel`); **22 evals** com o modelo real em 10 categorias (abstenção, acesso negado, injeção, tool fora, oráculo SQL); E2E Playwright; trajetória de cada execução + métricas | [docs/evals.md](docs/evals.md), telas **Trajetórias** e **Evals** |
-| **Demonstração e documentação (10%)** | este README, diagramas, 19 decisões registradas, roteiro de demo | [docs/roteiro-demo.md](docs/roteiro-demo.md) |
+| **Demonstração e documentação (10%)** | este README, diagramas, 19 decisões registradas, fluxo principal da demonstração | [Fluxo principal da demonstração](#fluxo-principal-da-demonstração), [docs/arquitetura.md](docs/arquitetura.md), [docs/decisoes.md](docs/decisoes.md) |
 
 ### Checklist do laboratório "Contexto Governado"
 
@@ -141,7 +141,7 @@ Diagramas de sequência, do grafo de estados e da governança em [docs/arquitetu
 ```
 academic-events/
 ├── README.md · docker-compose.yml · .env.example
-├── docs/            planejamento · prompt (contexto) · arquitetura · agentes · contratos-tools · decisoes · evals · roteiro-demo · img/ · referencias/
+├── docs/            planejamento · arquitetura · agentes · contratos-tools · decisoes · evals · img/ · referencias/
 ├── backend/
 │   ├── app/
 │   │   ├── core/          config · banco · JWT · erros · correlation-id

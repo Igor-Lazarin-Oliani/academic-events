@@ -18,6 +18,7 @@ import { RunDetailPage, RunsPage } from "@/features/panel/RunsPage";
 import { AttendeesPage, CheckinPage, SupportPage } from "@/features/panel/OpsPages";
 import { GraphPage, KnowledgePage } from "@/features/panel/KnowledgePages";
 import { AgentsPage, AuditPage, EvalsPage } from "@/features/panel/QualityPages";
+import { NewEventPage } from "@/features/panel/NewEventPage";
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 15_000, retry: 1, refetchOnWindowFocus: false } } });
 
@@ -49,6 +50,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
                 <Route path="evals" element={<EvalsPage />} />
                 <Route path="agentes" element={<AgentsPage />} />
                 <Route path="auditoria" element={<AuditPage />} />
+                <Route path="eventos/novo" element={<NewEventPage />} />
               </Route>
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

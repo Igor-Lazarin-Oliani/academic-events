@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { NavLink, Navigate, Outlet, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Activity, Bot, CheckSquare, ClipboardCheck, ClipboardList, FlaskConical, GitBranch, Inbox, LayoutDashboard, Menu, MessageSquareWarning, Route, Siren, Users, X } from "lucide-react";
+import { Activity, Bot, CheckSquare, ClipboardCheck, ClipboardList, FlaskConical, GitBranch, Inbox, LayoutDashboard, Menu, MessageSquareWarning, PlusCircle, Route, Siren, Users, X } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import type { EventSummary, Page, Proposal } from "@/lib/types";
@@ -31,6 +31,9 @@ const NAV = [
     { to: "/painel/evals", label: "Evals", icon: FlaskConical, roles: ["organizer", "admin"] },
     { to: "/painel/agentes", label: "Arquitetura", icon: Bot, roles: ["organizer", "admin"] },
     { to: "/painel/auditoria", label: "Auditoria (Logs)", icon: Activity, roles: ["organizer", "admin"] },
+  ]},
+  { group: "Administração", items: [
+    { to: "/painel/eventos/novo", label: "Novo evento", icon: PlusCircle, roles: ["admin"] },
   ]},
 ];
 
@@ -109,7 +112,7 @@ export function PanelLayout() {
             <div className="ml-auto flex items-center gap-1"><ThemeToggle /><NotificationsBell /><UserMenu /></div>
           </header>
           <main className="flex-1 overflow-y-auto px-4 py-6 lg:px-8 scrollbar-thin">
-            {isLoading ? <Spinner /> : event ? <Outlet /> : <p className="text-subtle">Você não gerencia nenhum evento.</p>}
+            {isLoading ? <Spinner /> : event || loc.pathname.startsWith("/painel/eventos/novo") ? <Outlet /> : <p className="text-subtle">Você não gerencia nenhum evento.</p>}
           </main>
         </div>
       </div>

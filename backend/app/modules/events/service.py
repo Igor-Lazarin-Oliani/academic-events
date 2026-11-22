@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session as DbSession, selectinload
 from app.core.errors import Conflict, DomainError, NotFound
 from app.modules.activity.service import record
 from app.modules.events.models import Event, EventStatus, Room, Session, SessionStatus, Speaker
-from app.modules.events.schemas import EventIn, EventUpdateIn, SessionIn, SessionUpdateIn
+from app.modules.events.schemas import EventCreateIn, EventIn, EventUpdateIn, SessionIn, SessionUpdateIn
 
 
 def get_event(db: DbSession, id_or_slug: str) -> Event:
@@ -85,17 +85,24 @@ def get_session(db: DbSession, session_id_or_code: str, event_id: str | None = N
     return session
 
 
-def create_event(db: DbSession, body: EventIn, actor) -> Event:
+def create_event(db: DbSession, body: EventIn | EventCreateIn, actor) -> Event:
+    """Cria o evento e, se vierem, as sessões iniciais. Qualquer erro desfaz tudo (o commit é do router)."""
     if body.end_at <= body.start_at:
         raise DomainError("end_at must be after start_at")
     if db.scalar(select(Event).where(Event.slug == body.slug)):
         raise Conflict("Slug already in use")
-    event = Event(**body.model_dump())
+    sessions = getattr(body, "sessions", [])
+    codes = [s.code.strip().upper() for s in sessions]
+    if len(codes) != len(set(codes)):
+        raise DomainError("Duplicate session code", code="duplicate_session_code")
+    event = Event(**body.model_dump(exclude={"sessions"}))
     if actor.role == "organizer":
         event.organizers.append(actor)
     db.add(event)
     db.flush()
     record(db, entity_type="event", entity_id=event.id, action="event.created", message=event.title, actor=actor)
+    for s in sessions:
+        create_session(db, event, s, actor)
     return event
 
 
