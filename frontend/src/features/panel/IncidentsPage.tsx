@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, ArrowRight, Bot, CheckCircle2, HelpCircle, Siren, Sparkles } from "lucide-react";
 import { streamPost } from "@/lib/api";
 import type { Step } from "@/lib/types";
+import { plural } from "@/lib/utils";
 import { Badge, Button, Card, CardBody, CardHeader, PageHeader, Textarea } from "@/components/ui";
 import { usePanelEvent } from "@/components/layout/PanelLayout";
 import { Timeline } from "@/features/assistant/timeline";
@@ -79,7 +80,7 @@ export function IncidentsPage() {
                     </div>
                   ))}
                 </div>
-                {revisions > 0 && <p className="mt-3 text-xs text-warn">↺ {revisions} revisão(ões): o Revisor devolveu o comunicado ao agente</p>}
+                {revisions > 0 && <p className="mt-3 text-xs text-warn">↺ {plural(revisions, "revisão", "revisões")}: o Revisor devolveu o comunicado ao agente</p>}
               </CardBody>
             </Card>
           )}
@@ -96,7 +97,7 @@ export function IncidentsPage() {
                     <PlanSteps changes={result.proposal?.impact?.changes ?? []} />
                     {draft.communication && (
                       <div className="rounded-xl border border-border bg-muted/40 p-4">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-subtle">Comunicado para {result.proposal?.impact?.recipients ?? 0} inscritos</p>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-subtle">Comunicado para {plural(result.proposal?.impact?.recipients ?? 0, "inscrito", "inscritos")}</p>
                         <p className="mt-2 text-sm font-semibold">{draft.communication.title}</p>
                         <div className="mt-1 text-sm"><Markdown text={draft.communication.body} compact /></div>
                       </div>

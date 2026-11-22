@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Bot, Coins, Cpu, Route, Timer, Wrench } from "lucide-react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { ArrowLeft, Bot, Coins, Cpu, Route, Search, Timer, Wrench } from "lucide-react";
 import { api } from "@/lib/api";
-import type { Run, RunDetail } from "@/lib/types";
-import { fmt } from "@/lib/utils";
-import { Badge, Card, CardBody, CardHeader, EmptyState, ErrorBox, PageHeader, Select, Skeleton, Stat } from "@/components/ui";
+import { pageQuery, useDebounced, usePagination } from "@/lib/pagination";
+import type { Page, Run, RunDetail } from "@/lib/types";
+import { cn, fmt, plural } from "@/lib/utils";
+import { Badge, Card, CardBody, CardHeader, EmptyState, ErrorBox, Input, PageHeader, Pagination, Select, Skeleton, Stat } from "@/components/ui";
 import { usePanelEvent } from "@/components/layout/PanelLayout";
 import { Timeline } from "@/features/assistant/timeline";
 
@@ -20,8 +21,12 @@ export function RunsPage() {
   const { event } = usePanelEvent();
   const [agent, setAgent] = useState("");
   const [status, setStatus] = useState("");
-  const qs = new URLSearchParams({ event_id: event!.id, limit: "100", ...(agent && { agent }), ...(status && { status }) });
-  const { data: runs = [], isLoading } = useQuery({ queryKey: ["runs", qs.toString()], queryFn: () => api<Run[]>(`/runs?${qs}`), refetchInterval: 15_000 });
+  const [q, setQ] = useState("");
+  const search = useDebounced(q.trim());
+  const pg = usePagination(`${event!.id}|${agent}|${status}|${search}`);
+  const qs = pageQuery({ event_id: event!.id, agent, status, q: search }, pg);
+  const { data, isLoading, isFetching } = useQuery({ queryKey: ["runs", qs.toString()], queryFn: () => api<Page<Run>>(`/runs?${qs}`), refetchInterval: 15_000, placeholderData: keepPreviousData });
+  const runs = data?.items ?? [];
   const { data: stats } = useQuery({ queryKey: ["run-stats", event!.id], queryFn: () => api<any>(`/runs/stats?event_id=${event!.id}`) });
   return (
     <div>
@@ -35,14 +40,15 @@ export function RunsPage() {
         </div>
       )}
       <Card>
-        <CardHeader title="Execuções" action={
-          <div className="flex gap-2">
+        <CardHeader title={data ? plural(data.total, "execução", "execuções") : "Execuções"} action={
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <div className="relative"><Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-subtle" /><Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Entrada ou correlation_id" className="h-9 pl-9 sm:w-60" /></div>
             <Select value={agent} onChange={(e) => setAgent(e.target.value)} className="h-9 w-36"><option value="">Todos os agentes</option><option value="participant">Assistente</option><option value="operations">Operações</option><option value="reviewer">Revisor</option></Select>
             <Select value={status} onChange={(e) => setStatus(e.target.value)} className="h-9 w-40"><option value="">Todos os status</option>{Object.keys(STATUS_TONE).map((s) => <option key={s} value={s}>{s}</option>)}</Select>
           </div>} />
         <CardBody className="overflow-x-auto">
-          {isLoading ? <Skeleton className="h-40" /> : runs.length === 0 ? <EmptyState icon={<Route className="h-6 w-6" />} title="Nenhuma execução" description="Converse com o assistente ou relate uma ocorrência." /> : (
-            <table className="w-full min-w-[720px] text-sm">
+          {isLoading ? <Skeleton className="h-40" /> : runs.length === 0 ? <EmptyState icon={<Route className="h-6 w-6" />} title="Nenhuma execução" description={search || agent || status ? "Nenhum resultado para os filtros atuais." : "Converse com o assistente ou relate uma ocorrência."} /> : (
+            <table className={cn("w-full min-w-[720px] text-sm transition-opacity", isFetching && "opacity-60")}>
               <thead><tr className="text-left text-xs text-subtle"><th className="pb-2">Entrada</th><th className="pb-2">Agente</th><th className="pb-2">Status</th><th className="pb-2 text-right">Modelo/Tools</th><th className="pb-2 text-right">Tokens</th><th className="pb-2 text-right">Duração</th><th className="pb-2 text-right">Quando</th></tr></thead>
               <tbody className="divide-y divide-border">
                 {runs.map((r) => (
@@ -59,6 +65,7 @@ export function RunsPage() {
               </tbody>
             </table>
           )}
+          {!isLoading && <Pagination page={pg.page} pageSize={pg.pageSize} total={data?.total ?? 0} onPageChange={pg.setPage} loading={isFetching} />}
         </CardBody>
       </Card>
     </div>
@@ -88,7 +95,7 @@ export function RunDetailPage() {
             <CardHeader title="Resumo" />
             <CardBody className="grid grid-cols-2 gap-3 text-sm">
               <Metric icon={<Cpu className="h-4 w-4" />} label="Chamadas ao modelo" value={run.model_calls} />
-              <Metric icon={<Wrench className="h-4 w-4" />} label="Ferramentas" value={`${run.tool_calls} (${tools.filter((t) => t.status !== "ok").length} erro)`} />
+              <Metric icon={<Wrench className="h-4 w-4" />} label="Ferramentas" value={`${run.tool_calls} (${plural(tools.filter((t) => t.status !== "ok").length, "erro", "erros")})`} />
               <Metric icon={<Coins className="h-4 w-4" />} label="Tokens" value={(run.tokens_in + run.tokens_out).toLocaleString("pt-BR")} />
               <Metric icon={<Timer className="h-4 w-4" />} label="Duração" value={run.ended_at ? fmt.duration(new Date(run.ended_at).getTime() - new Date(run.started_at).getTime()) : "em andamento"} />
               <div className="col-span-2 text-xs text-subtle">correlation_id <span className="font-mono">{run.correlation_id}</span>{run.current_node && <> · nó atual <span className="font-mono">{run.current_node}</span></>}</div>

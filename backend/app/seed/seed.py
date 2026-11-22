@@ -57,7 +57,7 @@ ROOMS = [
 ]
 
 SPEAKERS = [
-    ("Dra. Helena Duarte", "FACOM/UFMS", "Pesquisadora em IA aplicada a engenharia de software."),
+    ("Dra. Helena Duarte", "FACOM/UFMS", "Pesquisadora em IA aplicada à engenharia de software."),
     ("Prof. Ricardo Menezes", "FACOM/UFMS", "Professor de engenharia de software e arquitetura."),
     ("Marina Okada", "Pantanal Tech (fictícia)", "Desenvolvedora backend e mentora de carreira."),
     ("Thiago Ribeiro", "Cerrado Cloud (fictícia)", "Engenheiro de plataforma e DevOps."),

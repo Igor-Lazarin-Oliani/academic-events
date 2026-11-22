@@ -5,7 +5,7 @@ import { ArrowLeft, CalendarDays, CheckCircle2, FileText, MapPin, ShieldAlert, T
 import { api, friendlyError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import type { EventDetail, KnowledgeDoc, Session, Ticket } from "@/lib/types";
-import { cn, fmt, initials, KIND_LABEL } from "@/lib/utils";
+import { cn, fmt, initials, KIND_LABEL, pluralWord } from "@/lib/utils";
 import { Badge, Button, Card, Dialog, EmptyState, ErrorBox, Skeleton, Tabs, useToast } from "@/components/ui";
 import { EventCover, Markdown, Occupancy, SessionBadges, SessionMeta } from "@/components/shared";
 
@@ -38,9 +38,9 @@ export function EventPage() {
               </div>
             </div>
             <div className="flex gap-3">
-              <div className="rounded-xl bg-white/15 px-4 py-3 text-center backdrop-blur"><p className="text-2xl font-bold">{ev.sessions.length}</p><p className="text-xs text-white/80">sessões</p></div>
-              <div className="rounded-xl bg-white/15 px-4 py-3 text-center backdrop-blur"><p className="text-2xl font-bold">{capacity - occupied}</p><p className="text-xs text-white/80">vagas abertas</p></div>
-              {user && <Link to="/meus-ingressos" className="rounded-xl bg-white px-4 py-3 text-center text-brand"><p className="text-2xl font-bold">{active.length}</p><p className="text-xs">suas inscrições</p></Link>}
+              <div className="rounded-xl bg-white/15 px-4 py-3 text-center backdrop-blur"><p className="text-2xl font-bold">{ev.sessions.length}</p><p className="text-xs text-white/80">{pluralWord(ev.sessions.length, "sessão", "sessões")}</p></div>
+              <div className="rounded-xl bg-white/15 px-4 py-3 text-center backdrop-blur"><p className="text-2xl font-bold">{capacity - occupied}</p><p className="text-xs text-white/80">{pluralWord(capacity - occupied, "vaga aberta", "vagas abertas")}</p></div>
+              {user && <Link to="/meus-ingressos" className="rounded-xl bg-white px-4 py-3 text-center text-brand"><p className="text-2xl font-bold">{active.length}</p><p className="text-xs">{pluralWord(active.length, "sua inscrição", "suas inscrições")}</p></Link>}
             </div>
           </div>
         </div>
@@ -126,14 +126,14 @@ function SessionCard({ s, ticket, eventSlug }: { s: Session; ticket?: Ticket; ev
           <Link to="/meus-ingressos"><Button variant="secondary" size="sm"><CheckCircle2 className="h-4 w-4 text-ok" />Inscrito</Button></Link>
         ) : (
           <Button size="sm" disabled={s.status !== "PUBLISHED" || ended} onClick={() => (user ? setConfirm(true) : nav(`/entrar?next=/eventos/${eventSlug}`))}>
-            <TicketIcon className="h-4 w-4" />{s.status === "SOLD_OUT" ? "Esgotado" : ended ? "Encerrada" : "Inscrever-se"}
+            <TicketIcon className="h-4 w-4" />{s.status === "SOLD_OUT" ? "Esgotada" : ended ? "Encerrada" : "Inscrever-se"}
           </Button>
         )}
       </div>
       <Dialog open={confirm} onClose={() => setConfirm(false)} title="Confirmar inscrição" description={`${s.code} · ${s.title}`}
         footer={<><Button variant="ghost" onClick={() => setConfirm(false)}>Cancelar</Button><Button onClick={() => issue.mutate()} loading={issue.isPending}>Confirmar inscrição</Button></>}>
         <SessionMeta s={s} />
-        <p className="mt-4 text-sm text-subtle">Você receberá um ingresso com QR Code. O certificado ({s.workload_hours}h) é emitido para quem fizer check-in na sala.</p>
+        <p className="mt-4 text-sm text-subtle">Você receberá um ingresso com código único. O certificado ({s.workload_hours}h) é emitido para quem fizer check-in na sala.</p>
       </Dialog>
     </Card>
   );

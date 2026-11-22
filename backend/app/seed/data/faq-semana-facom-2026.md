@@ -18,9 +18,9 @@ Sim, há estacionamento gratuito na Cidade Universitária, sujeito à disponibil
 
 Sim. Basta criar uma conta na plataforma e se inscrever nas sessões.
 
-## 5. Perdi meu QR Code. E agora?
+## 5. Esqueci o código do meu ingresso. E agora?
 
-O QR Code fica sempre disponível em "Meus ingressos" na plataforma. Na porta da sala, também é possível informar o código do ingresso (EVT-2026-XXXXXX).
+O código do ingresso (EVT-2026-XXXXXX) fica sempre disponível em "Meus ingressos" na plataforma. Basta informá-lo à equipe de credenciamento na porta da sala.
 
 ## 6. Como sei se uma sessão mudou de horário ou de sala?
 

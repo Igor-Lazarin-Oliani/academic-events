@@ -10,7 +10,7 @@ A Semana Acadêmica FACOM 2026 acontece de 30 de novembro a 4 de dezembro de 202
 
 ### 2.1 Como se inscrever
 
-As inscrições são feitas exclusivamente pela plataforma academic-events, sessão por sessão. Cada inscrição gera um ingresso digital com código único no formato EVT-2026-XXXXXX e um QR Code.
+As inscrições são feitas exclusivamente pela plataforma academic-events, sessão por sessão. Cada inscrição gera um ingresso digital com código único no formato EVT-2026-XXXXXX.
 
 ### 2.2 Limite de minicursos
 
@@ -56,7 +56,7 @@ Os certificados ficam disponíveis na plataforma em até 15 dias após o encerra
 
 ### 5.1 Como funciona
 
-O check-in é feito pela equipe de credenciamento na porta de cada sala, com a leitura do QR Code ou a digitação do código do ingresso.
+O check-in é feito pela equipe de credenciamento na porta de cada sala, com a digitação do código do ingresso.
 
 ### 5.2 Tolerância
 

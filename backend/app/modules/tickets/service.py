@@ -7,12 +7,14 @@ o que permite compor operações (ex.: troca = cancelar + emitir, tudo ou nada).
 import secrets
 from datetime import datetime
 
-from sqlalchemy import and_, func, select, text, update
+from sqlalchemy import Select, and_, func, select, text, update
 from sqlalchemy.orm import Session as DbSession, selectinload
 
 from app.core.database import new_id, utcnow
 from app.core.errors import Conflict, DomainError, Forbidden, NotFound
+from app.core.pagination import split_values, text_filter
 from app.modules.activity.service import record
+from app.modules.auth.models import User
 from app.modules.events.models import Event, EventStatus, Session, SessionKind, SessionStatus
 from app.modules.tickets.models import Ticket, TicketStatus
 
@@ -192,6 +194,26 @@ def list_tickets(
         if val:
             stmt = stmt.where(col == val)
     return list(db.scalars(stmt.order_by(Ticket.created_at.desc()).limit(limit).offset(offset)))
+
+
+def attendees_query(*, event_id: str, session_id: str | None = None, status: str | None = None, q: str | None = None) -> Select:
+    """Inscritos de um evento com filtros no banco. `q` busca em nome, e-mail e código do ingresso;
+    `status` aceita vários valores separados por vírgula. A paginação fica a cargo de quem chama."""
+    stmt = (
+        select(Ticket)
+        .join(User, User.id == Ticket.user_id)
+        .options(selectinload(Ticket.session).selectinload(Session.room), selectinload(Ticket.user))
+        .where(Ticket.event_id == event_id)
+    )
+    if session_id:
+        stmt = stmt.where(Ticket.session_id == session_id)
+    statuses = split_values(status)
+    if statuses:
+        stmt = stmt.where(Ticket.status.in_(statuses))
+    cond = text_filter(q, User.name, User.email, Ticket.ticket_code)
+    if cond is not None:
+        stmt = stmt.where(cond)
+    return stmt.order_by(Ticket.created_at.desc(), Ticket.id)
 
 
 def count_active_by_session(db: DbSession, session_ids: list[str]) -> dict[str, int]:

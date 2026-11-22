@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FileText, GitBranch, ShieldAlert, Upload } from "lucide-react";
 import { api, friendlyError } from "@/lib/api";
 import type { KnowledgeDoc } from "@/lib/types";
-import { cn, fmt } from "@/lib/utils";
+import { cn, fmt, plural, pluralWord } from "@/lib/utils";
 import { Badge, Button, Card, CardBody, CardHeader, Dialog, Input, Label, PageHeader, Select, Skeleton, Textarea, useToast } from "@/components/ui";
 import { Markdown } from "@/components/shared";
 import { usePanelEvent } from "@/components/layout/PanelLayout";
@@ -76,11 +76,11 @@ export function GraphPage() {
           <CardBody>
             {!sel ? <p className="text-sm text-subtle"><GitBranch className="mb-2 h-6 w-6" />O caminho no grafo é a evidência: “Sala 105 -HELD_IN- S10” explica por que a S10 é afetada.</p> : !impact ? <Skeleton className="h-40" /> : (
               <div className="space-y-3">
-                <div className="rounded-xl bg-brand-soft p-3 text-center"><p className="text-2xl font-bold text-brand">{impact.affected_participants}</p><p className="text-xs text-subtle">participantes distintos afetados</p></div>
+                <div className="rounded-xl bg-brand-soft p-3 text-center"><p className="text-2xl font-bold text-brand">{impact.affected_participants}</p><p className="text-xs text-subtle">{pluralWord(impact.affected_participants, "participante distinto afetado", "participantes distintos afetados")}</p></div>
                 {impact.affected_sessions.map((s: any) => (
                   <div key={s.session_code} className="rounded-xl border border-border p-3">
                     <p className="text-sm font-medium">{s.session_code} · {s.title}</p>
-                    <p className="text-xs text-subtle">{fmt.weekdayShort(s.start_at)} {fmt.range(s.start_at, s.end_at)} · {s.registrations} inscritos</p>
+                    <p className="text-xs text-subtle">{fmt.weekdayShort(s.start_at)} {fmt.range(s.start_at, s.end_at)} · {plural(s.registrations, "inscrito", "inscritos")}</p>
                     <p className="mt-1 font-mono text-[10px] text-subtle">{s.path}</p>
                   </div>
                 ))}
@@ -133,7 +133,7 @@ export function KnowledgePage() {
             <button key={d.id} onClick={() => setSel(d.id)} className={cn("w-full rounded-xl border p-3 text-left text-sm transition", d.id === current ? "border-brand bg-brand-soft/50" : "border-border hover:bg-muted", d.status !== "ACTIVE" && "opacity-60")}>
               <p className="flex items-center gap-2 font-medium">{d.trust === "OFFICIAL" ? <FileText className="h-4 w-4 text-brand" /> : <ShieldAlert className="h-4 w-4 text-warn" />}{d.title}</p>
               <div className="mt-1.5 flex flex-wrap gap-1.5"><Badge>{d.source_id}</Badge><Badge>v{d.version}</Badge><Badge tone={d.status === "ACTIVE" ? "ok" : "muted"}>{d.status === "ACTIVE" ? "vigente" : "substituído"}</Badge><Badge tone={d.trust === "OFFICIAL" ? "brand" : "warn"}>{d.trust === "OFFICIAL" ? "oficial" : "não verificado"}</Badge></div>
-              <p className="mt-1 text-xs text-subtle">{d.sections} seções · {fmt.dateTime(d.updated_at)}</p>
+              <p className="mt-1 text-xs text-subtle">{plural(d.sections, "seção", "seções")} · {fmt.dateTime(d.updated_at)}</p>
             </button>
           ))}
         </div>

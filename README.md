@@ -33,7 +33,7 @@ docker compose down -v && docker compose up -d   # reset do banco de demonstraç
 
 Comissões organizadoras de eventos acadêmicos são **pequenas, voluntárias e rotativas**. Elas passam a semana do evento:
 
-1. respondendo as **mesmas dúvidas** no WhatsApp ("tem certificado?", "posso trocar de minicurso?", "mudou de sala?");
+1. respondendo às **mesmas dúvidas** no WhatsApp ("tem certificado?", "posso trocar de minicurso?", "mudou de sala?");
 2. apagando **incêndios de última hora** (palestrante cancelou, sala sem energia) sem saber direito **quem é afetado**;
 3. mandando **comunicados com erro** (horário ou sala trocados), o que gera mais dúvidas.
 

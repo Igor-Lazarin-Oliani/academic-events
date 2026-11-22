@@ -47,7 +47,7 @@ export function SessionBadges({ s }: { s: Session }) {
       <Badge tone={KIND_TONE[s.kind] ?? "muted"}>{KIND_LABEL[s.kind] ?? s.kind}</Badge>
       <Badge tone="muted">{s.track}</Badge>
       <Badge tone="muted">{s.workload_hours}h de certificado</Badge>
-      {s.status === "SOLD_OUT" && <Badge tone="danger">Esgotado</Badge>}
+      {s.status === "SOLD_OUT" && <Badge tone="danger">Esgotada</Badge>}
       {s.status === "CANCELLED" && <Badge tone="danger">Cancelada</Badge>}
     </div>
   );

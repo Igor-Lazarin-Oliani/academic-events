@@ -1,17 +1,22 @@
+import csv
+import io
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.orm import Session as DbSession
 
 from app.core.database import get_db
 from app.core.deps import ensure_can_manage_event, get_current_user, require_roles
 from app.core.errors import Forbidden
+from app.core.pagination import Page, PageParams, paginate
 from app.modules.auth.models import User
 from app.modules.events.schemas import SessionOut
 from app.modules.tickets import service
 
 router = APIRouter(tags=["tickets"])
+_TZ = ZoneInfo("America/Campo_Grande")
 
 
 class TicketOut(BaseModel):
@@ -100,13 +105,39 @@ def check_in(body: CheckInIn, user: User = Depends(require_roles("staff", "organ
     return AttendeeOut(**TicketOut.model_validate(t).model_dump(), participant_name=t.user.name, participant_email=t.user.email)
 
 
-@router.get("/events/{event_id}/attendees", response_model=list[AttendeeOut])
-def attendees(event_id: str, session_id: str | None = None, status: str | None = None,
-              user: User = Depends(require_roles("staff", "organizer", "admin")), db: DbSession = Depends(get_db)):
+def _to_attendee(t) -> AttendeeOut:
+    return AttendeeOut(**TicketOut.model_validate(t).model_dump(), participant_name=t.user.name, participant_email=t.user.email)
+
+
+def _attendees_scope(db: DbSession, user: User, event_id: str, session_id: str | None, status: str | None) -> None:
     ensure_can_manage_event(db, user, event_id)
     if session_id is None and status is None and user.role == "staff":
         raise Forbidden("Staff must filter by session")
-    return [
-        AttendeeOut(**TicketOut.model_validate(t).model_dump(), participant_name=t.user.name, participant_email=t.user.email)
-        for t in service.list_tickets(db, event_id=event_id, session_id=session_id, status=status)
-    ]
+
+
+@router.get("/events/{event_id}/attendees", response_model=Page[AttendeeOut])
+def attendees(event_id: str, session_id: str | None = None, status: str | None = None, q: str | None = None,
+              page: PageParams = Depends(), user: User = Depends(require_roles("staff", "organizer", "admin")), db: DbSession = Depends(get_db)):
+    _attendees_scope(db, user, event_id, session_id, status)
+    stmt = service.attendees_query(event_id=event_id, session_id=session_id, status=status, q=q)
+    return paginate(db, stmt, page, _to_attendee)
+
+
+_STATUS_LABEL = {"CONFIRMED": "Confirmado", "CHECKED_IN": "Presença registrada", "CANCELLED": "Cancelado"}
+
+
+@router.get("/events/{event_id}/attendees/export")
+def export_attendees(event_id: str, session_id: str | None = None, status: str | None = None, q: str | None = None,
+                     user: User = Depends(require_roles("staff", "organizer", "admin")), db: DbSession = Depends(get_db)):
+    """CSV com TODOS os inscritos que batem com os filtros (a tela só carrega uma página por vez)."""
+    _attendees_scope(db, user, event_id, session_id, status)
+    stmt = service.attendees_query(event_id=event_id, session_id=session_id, status=status, q=q)
+    buf = io.StringIO()
+    buf.write("﻿")  # BOM: o Excel abre acentos corretamente
+    w = csv.writer(buf, delimiter=";", quoting=csv.QUOTE_ALL, lineterminator="\n")
+    w.writerow(["Código", "Nome", "E-mail", "Sessão", "Status", "Check-in"])
+    for t in db.scalars(stmt):
+        checked = t.checked_in_at.astimezone(_TZ).strftime("%d/%m %H:%M") if t.checked_in_at else ""
+        w.writerow([t.ticket_code, t.user.name, t.user.email, t.session.code if t.session else "", _STATUS_LABEL.get(t.status, t.status), checked])
+    return Response(content=buf.getvalue(), media_type="text/csv; charset=utf-8",
+                    headers={"Content-Disposition": 'attachment; filename="inscritos.csv"'})

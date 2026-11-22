@@ -1,6 +1,6 @@
 """Agente Revisor (evaluator do padrão evaluator-optimizer).
 
-1) Checagens DETERMINÍSTICAS: toda data, horário, sala e sessão citados no comunicado batem
+1) Checagens DETERMINÍSTICAS: todas as datas, horários, salas e sessões citados no comunicado batem
    com os fatos do dry-run; os novos valores aparecem; tamanho adequado.
 2) Checagem pelo LLM (modelo leve, saída JSON com schema): fidelidade, completude, clareza, privacidade.
 Se o LLM estiver indisponível, vale só a parte determinística (e isso fica registrado)."""

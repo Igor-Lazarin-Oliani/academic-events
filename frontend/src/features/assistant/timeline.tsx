@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { AlertTriangle, ArrowRightLeft, Bot, BrainCircuit, CheckCircle2, ChevronDown, CircleDot, FileCheck2, Flag, GitBranch, Play, ShieldAlert, ShieldCheck, UserCheck, Wrench, XCircle } from "lucide-react";
 import type { Step } from "@/lib/types";
-import { cn, fmt } from "@/lib/utils";
+import { cn, fmt, plural } from "@/lib/utils";
 
 export const TOOL_LABEL: Record<string, string> = {
   search_event_knowledge: "Buscando no regulamento e no FAQ",
@@ -47,7 +47,7 @@ export function describe(s: Step): StepView | null {
       if (s.status !== "ok") return { icon: <AlertTriangle className="h-3.5 w-3.5" />, title: "Modelo indisponível: modo degradado", detail: out.error, tone: "danger" };
       const calls: string[] = (out.tool_calls ?? []).map((c: any) => c.name);
       const attempts = out.attempts ?? [];
-      const fallback = attempts.length > 1 ? ` · fallback após ${attempts.length - 1} falha(s)` : "";
+      const fallback = attempts.length > 1 ? ` · fallback após ${plural(attempts.length - 1, "falha", "falhas")}` : "";
       const who = s.agent === "reviewer" ? "Revisor (LLM) avaliou o comunicado" : calls.includes("final_answer") ? "Modelo decidiu responder" : `Modelo decidiu: ${calls.map((c) => TOOL_LABEL[c] ?? c).join(" + ") || "pensar"}`;
       return { icon: <BrainCircuit className="h-3.5 w-3.5" />, title: who, tone: "brand", meta: `${s.name} · ${fmt.duration(s.duration_ms)} · ${(s.tokens_in ?? 0) + (s.tokens_out ?? 0)} tokens${fallback}` };
     }
@@ -57,10 +57,10 @@ export function describe(s: Step): StepView | null {
       const ok = s.status === "ok";
       const data = out.data ?? {};
       let detail = ok ? "" : out.error?.message;
-      if (ok && s.name === "query_impact_graph") detail = `${data.affected_sessions?.length ?? 0} sessão(ões) · ${data.affected_participants ?? 0} inscritos afetados`;
-      if (ok && s.name === "find_alternative_slots") detail = `${data.alternatives?.length ?? 0} alternativa(s); melhor: ${data.alternatives?.[0]?.when ?? "—"} (${data.alternatives?.[0]?.participants_with_conflict ?? "—"} conflitos)`;
+      if (ok && s.name === "query_impact_graph") detail = `${plural(data.affected_sessions?.length ?? 0, "sessão", "sessões")} · ${plural(data.affected_participants ?? 0, "inscrito afetado", "inscritos afetados")}`;
+      if (ok && s.name === "find_alternative_slots") detail = `${plural(data.alternatives?.length ?? 0, "alternativa", "alternativas")}; melhor: ${data.alternatives?.[0]?.when ?? "—"} (${typeof data.alternatives?.[0]?.participants_with_conflict === "number" ? plural(data.alternatives[0].participants_with_conflict, "conflito", "conflitos") : "— conflitos"})`;
       if (ok && s.name === "search_event_knowledge") detail = (data.results ?? []).map((r: any) => `${r.source_id} §${r.section}`).join(", ") || "nenhum trecho";
-      if (ok && s.name === "get_event_schedule") detail = `${data.count ?? 0} sessão(ões)`;
+      if (ok && s.name === "get_event_schedule") detail = plural(data.count ?? 0, "sessão", "sessões");
       if (ok && s.name === "validate_plan") detail = data.valid ? "plano válido" : `inválido: ${data.errors?.[0]?.message}`;
       return { icon: <Wrench className="h-3.5 w-3.5" />, title: TOOL_LABEL[s.name] ?? s.name, detail, tone: ok ? "ok" : "warn", meta: `${s.name} · ${fmt.duration(s.duration_ms)}${ok ? "" : ` · ${s.status}`}` };
     }

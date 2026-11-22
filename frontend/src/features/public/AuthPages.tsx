@@ -61,7 +61,7 @@ export function LoginPage() {
       </form>
       <p className="mt-4 text-center text-sm text-subtle">Ainda não tem conta? <Link to="/cadastro" className="font-medium text-brand">Cadastre-se</Link></p>
       <div className="mt-6 border-t border-border pt-5">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-subtle">Contas de demonstração (senha senha123)</p>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-subtle">Contas de demonstração (senha: senha123)</p>
         <div className="grid grid-cols-2 gap-2">
           {DEMO.map((d) => (
             <button key={d.email} disabled={busy} onClick={() => submit(undefined, { email: d.email, password: "senha123" })}
@@ -98,7 +98,7 @@ export function RegisterPage() {
   }
 
   return (
-    <Shell title="Criar conta" subtitle="Gratuito e aberto ao público externo.">
+    <Shell title="Criar conta" subtitle="Gratuita e aberta ao público externo.">
       <form onSubmit={submit} className="space-y-4">
         <div><Label>Nome completo</Label><Input value={form.name} onChange={set("name")} required minLength={2} /></div>
         <div><Label>E-mail</Label><Input type="email" value={form.email} onChange={set("email")} required /></div>

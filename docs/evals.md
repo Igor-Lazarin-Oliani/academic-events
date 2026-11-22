@@ -8,7 +8,7 @@ Seguimos a pirâmide da aula: **não testamos o texto exato** gerado pelo modelo
 | Contrato e resiliência | schema das tools no formato do Gemini, conversão de mensagens (preserva `thoughtSignature`), retry só em 429/5xx, fallback de modelos, timeout, circuit breaker, budget | `test_resilience.py`, `test_agentic_core.py` | idem |
 | Orquestração com `FakeModel` | loop, `final_answer` com grounding, ferramentas fora da allowlist, papel errado, argumentos inválidos, 403 auditado, tool indisponível, budget contra loop infinito, modo degradado, grafo de estados (checkpoint, pausa, transição inválida) | `test_agentic_core.py` | idem |
 | Agentes ponta a ponta com `FakeModel` | Assistente (evidência, memória, injeção, L2 com tool terminal, acesso negado, degradado), Operações (grafo completo com revisão e aprovação humana, investigação obrigatória, escopo), API com SSE | `test_agents.py` | idem |
-| **Evals de comportamento (modelo real)** | 22 casos em 8 categorias, executados contra o Gemini num banco próprio recriado a cada execução | `evals/cases/*.yaml`, `evals/run.py` | `docker compose exec backend python /evals/run.py` |
+| **Evals de comportamento (modelo real)** | 22 casos em 10 categorias, executados contra o Gemini num banco próprio recriado a cada execução | `evals/cases/*.yaml`, `evals/run.py` | `docker compose exec backend python /evals/run.py` |
 
 ## Categorias dos evals
 

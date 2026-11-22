@@ -1,11 +1,12 @@
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session as DbSession
 
 from app.core.database import get_db
 from app.core.deps import require_roles
+from app.core.pagination import Page, PageParams, paginate
 from app.modules.activity import service
 from app.modules.auth.models import User
 
@@ -37,12 +38,13 @@ class TriageIn(BaseModel):
     notes: str | None = None
 
 
-@router.get("", response_model=list[ActivityOut])
+@router.get("", response_model=Page[ActivityOut])
 def list_activity(entity_type: str | None = None, entity_id: str | None = None, action: str | None = None, source: str | None = None,
                   level: str | None = None, status: str | None = None, correlation_id: str | None = None, include_archived: bool = False,
-                  limit: int = Query(default=100, ge=1, le=500), offset: int = 0, _: User = Depends(auditor), db: DbSession = Depends(get_db)):
-    return service.list_logs(db, entity_type=entity_type, entity_id=entity_id, action=action, source=source, level=level, status=status,
-                             correlation_id=correlation_id, include_archived=include_archived, limit=limit, offset=offset)
+                  q: str | None = None, page: PageParams = Depends(), _: User = Depends(auditor), db: DbSession = Depends(get_db)):
+    stmt = service.logs_query(entity_type=entity_type, entity_id=entity_id, action=action, source=source, level=level, status=status,
+                              correlation_id=correlation_id, include_archived=include_archived, q=q)
+    return paginate(db, stmt, page)
 
 
 @router.put("/{log_id}", response_model=ActivityOut)

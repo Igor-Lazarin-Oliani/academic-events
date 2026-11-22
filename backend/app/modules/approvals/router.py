@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session as DbSession
 from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.core.errors import NotFound
+from app.core.pagination import Page, PageParams, paginate
 from app.modules.approvals import service
 from app.modules.approvals.models import ActionProposal
 from app.modules.auth.models import User
@@ -44,10 +45,10 @@ class DecisionIn(BaseModel):
     note: str | None = None
 
 
-@router.get("", response_model=list[ProposalOut])
-def list_proposals(status: str | None = None, event_id: str | None = None, kind: str | None = None,
-                   user: User = Depends(get_current_user), db: DbSession = Depends(get_db)):
-    return service.list_proposals(db, user=user, status=status, event_id=event_id, kind=kind)
+@router.get("", response_model=Page[ProposalOut])
+def list_proposals(status: str | None = None, event_id: str | None = None, kind: str | None = None, q: str | None = None,
+                   page: PageParams = Depends(), user: User = Depends(get_current_user), db: DbSession = Depends(get_db)):
+    return paginate(db, service.proposals_query(db, user=user, status=status, event_id=event_id, kind=kind, q=q), page)
 
 
 @router.get("/{proposal_id}", response_model=ProposalOut)

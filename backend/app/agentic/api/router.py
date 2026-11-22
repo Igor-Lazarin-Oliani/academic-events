@@ -23,6 +23,7 @@ from app.core import database
 from app.core.database import get_db
 from app.core.deps import ensure_can_manage_event, get_current_user, managed_event_ids, require_roles
 from app.core.errors import DomainError, Forbidden, NotFound
+from app.core.pagination import Page, PageParams, paginate, text_filter
 from app.modules.auth.models import User
 from app.modules.events.service import get_event
 
@@ -160,14 +161,18 @@ def _visible(db: DbSession, user: User, stmt):
     return stmt.where(or_(AgentRun.user_id == user.id, AgentRun.event_id.in_(ids or {"-"})))
 
 
-@router.get("/runs", response_model=list[RunOut])
-def list_runs(agent: str | None = None, status: str | None = None, event_id: str | None = None, limit: int = 50,
-              user: User = Depends(get_current_user), db: DbSession = Depends(get_db)):
-    stmt = select(AgentRun).order_by(AgentRun.started_at.desc()).limit(min(limit, 200))
+@router.get("/runs", response_model=Page[RunOut])
+def list_runs(agent: str | None = None, status: str | None = None, event_id: str | None = None, q: str | None = None,
+              page: PageParams = Depends(), user: User = Depends(get_current_user), db: DbSession = Depends(get_db)):
+    """Execuções paginadas. `q` busca no texto de entrada e no correlation_id."""
+    stmt = select(AgentRun)
     for col, val in ((AgentRun.agent, agent), (AgentRun.status, status), (AgentRun.event_id, event_id)):
         if val:
             stmt = stmt.where(col == val)
-    return list(db.scalars(_visible(db, user, stmt)))
+    cond = text_filter(q, AgentRun.input, AgentRun.correlation_id)
+    if cond is not None:
+        stmt = stmt.where(cond)
+    return paginate(db, _visible(db, user, stmt).order_by(AgentRun.started_at.desc(), AgentRun.id), page)
 
 
 @router.get("/runs/stats")

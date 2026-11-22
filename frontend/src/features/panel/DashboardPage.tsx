@@ -3,8 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Bot, CheckSquare, Gauge, ShieldAlert, Siren, Ticket, UserCheck, Users } from "lucide-react";
 import { api } from "@/lib/api";
-import type { Proposal, Run } from "@/lib/types";
-import { fmt } from "@/lib/utils";
+import type { Page, Proposal, Run } from "@/lib/types";
+import { fmt, plural } from "@/lib/utils";
 import { Badge, Button, Card, CardBody, CardHeader, EmptyState, PageHeader, Progress, Skeleton, Stat } from "@/components/ui";
 import { usePanelEvent } from "@/components/layout/PanelLayout";
 import { RunStatusBadge } from "./RunsPage";
@@ -14,8 +14,11 @@ export function DashboardPage() {
   const id = event!.id;
   const { data: d } = useQuery({ queryKey: ["dashboard", id], queryFn: () => api<any>(`/events/${id}/dashboard`), refetchInterval: 20_000 });
   const { data: stats } = useQuery({ queryKey: ["run-stats", id], queryFn: () => api<any>(`/runs/stats?event_id=${id}`) });
-  const { data: pending = [] } = useQuery({ queryKey: ["proposals", "pending", id], queryFn: () => api<Proposal[]>(`/proposals?status=PENDING&kind=ACTION_PLAN&event_id=${id}`) });
-  const { data: runs = [] } = useQuery({ queryKey: ["runs", id, "recent"], queryFn: () => api<Run[]>(`/runs?event_id=${id}&limit=6`) });
+  const { data: pendingPage } = useQuery({ queryKey: ["proposals", "pending", id], queryFn: () => api<Page<Proposal>>(`/proposals?status=PENDING&kind=ACTION_PLAN&event_id=${id}`) });
+  const { data: runsPage } = useQuery({ queryKey: ["runs", id, "recent"], queryFn: () => api<Page<Run>>(`/runs?event_id=${id}&limit=6`) });
+  const pending = pendingPage?.items ?? [];
+  const pendingTotal = pendingPage?.total ?? 0;
+  const runs = runsPage?.items ?? [];
 
   if (!d) return <div className="grid gap-4 sm:grid-cols-4">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-28" />)}</div>;
   const chart = d.sessions.filter((s: any) => s.status !== "CANCELLED").map((s: any) => ({ code: s.code, inscritos: s.occupied, livres: s.capacity - s.occupied, title: s.title }));
@@ -27,10 +30,10 @@ export function DashboardPage() {
         actions={<Link to="/painel/ocorrencias"><Button><Siren className="h-4 w-4" />Relatar ocorrência</Button></Link>} />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Participantes" value={d.participants} hint={`${d.tickets.confirmed + d.tickets.checked_in} inscrições ativas`} icon={<Users className="h-4 w-4" />} />
-        <Stat label="Ocupação" value={`${Math.round(d.occupancy_rate * 100)}%`} hint={`${d.occupied} de ${d.capacity} vagas · ${d.sold_out_sessions} esgotada(s)`} icon={<Gauge className="h-4 w-4" />} tone="accent" />
-        <Stat label="Check-ins" value={d.tickets.checked_in} hint={`${d.tickets.cancelled} cancelamento(s)`} icon={<UserCheck className="h-4 w-4" />} tone="ok" />
-        <Stat label="Aguardando aprovação" value={pending.length} hint="planos de ação dos agentes" icon={<CheckSquare className="h-4 w-4" />} tone={pending.length ? "warn" : "muted"} />
+        <Stat label="Participantes" value={d.participants} hint={plural(d.tickets.confirmed + d.tickets.checked_in, "inscrição ativa", "inscrições ativas")} icon={<Users className="h-4 w-4" />} />
+        <Stat label="Ocupação" value={`${Math.round(d.occupancy_rate * 100)}%`} hint={`${d.occupied} de ${plural(d.capacity, "vaga", "vagas")} · ${plural(d.sold_out_sessions, "esgotada", "esgotadas")}`} icon={<Gauge className="h-4 w-4" />} tone="accent" />
+        <Stat label="Check-ins" value={d.tickets.checked_in} hint={plural(d.tickets.cancelled, "cancelamento", "cancelamentos")} icon={<UserCheck className="h-4 w-4" />} tone="ok" />
+        <Stat label="Aguardando aprovação" value={pendingTotal} hint="planos de ação dos agentes" icon={<CheckSquare className="h-4 w-4" />} tone={pendingTotal ? "warn" : "muted"} />
       </div>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[1.6fr_1fr]">
@@ -82,7 +85,7 @@ export function DashboardPage() {
                 {pending.map((p) => (
                   <Link key={p.id} to="/painel/aprovacoes" className="block rounded-xl border border-warn/40 bg-warn/5 p-3 hover:bg-warn/10">
                     <p className="text-sm font-medium">{p.title}</p>
-                    <p className="mt-1 text-xs text-subtle">{p.impact?.recipients ?? 0} inscritos serão notificados · {fmt.relative(p.created_at)}</p>
+                    <p className="mt-1 text-xs text-subtle">{plural(p.impact?.recipients ?? 0, "inscrito será notificado", "inscritos serão notificados")} · {fmt.relative(p.created_at)}</p>
                   </Link>
                 ))}
               </div>
@@ -109,7 +112,7 @@ export function DashboardPage() {
           </CardBody>
         </Card>
       </div>
-      <p className="mt-6 flex items-center gap-1.5 text-xs text-subtle"><Ticket className="h-3.5 w-3.5" />Atualiza automaticamente a cada 20 s.</p>
+      <p className="mt-6 flex items-center gap-1.5 text-xs text-subtle"><Ticket className="h-3.5 w-3.5" />Atualizado automaticamente a cada 20 s.</p>
     </div>
   );
 }

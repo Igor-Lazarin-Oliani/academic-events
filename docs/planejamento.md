@@ -3,7 +3,7 @@
 > Disciplina: **Técnicas Avançadas em Desenvolvimento de Software** (TADS · UFMS), Prof. Vitor Mesaque Alves de Lima
 > Base: projeto `events-tickets-ms` (Trabalho de CD 2026-2), reescrito como aplicação única com uma camada agêntica
 > Status: **v1.0 (18/11/2026): MVP implementado.** O que foi entregue está no [README](../README.md); as decisões tomadas durante a implementação, em [decisoes.md](decisoes.md). Este documento registra o plano original.
-> Plano v0.2 (17/11/2026): Decididos: ideia A (eventos acadêmicos), **Gemini (free tier)**, **FastAPI + orquestrador próprio**, **individual, prazo de 4 dias**
+> Plano v0.2 (17/11/2026): decididos: ideia A (eventos acadêmicos), **Gemini (free tier)**, **FastAPI + orquestrador próprio**, **individual, prazo de 4 dias**
 
 ---
 
@@ -23,7 +23,7 @@ O documento descreve a visão completa. Com **4 dias e uma pessoa só**, o MVP �
 | Orquestrador com estados, checkpoint, budget, timeout, retry e circuit breaker | Retomada de run depois de reiniciar o servidor (o checkpoint é gravado, mas a retomada fica para depois) |
 | Trace por run, tela de **Trajetória** | Prometheus/Grafana |
 | pytest (domínio, gateway, políticas, orquestração com `FakeModel`) e **~20 evals** | Playwright, Vitest |
-| Frontend: catálogo, evento/programação, meus ingressos (QR), chat com fontes e cartões de ação, dashboard do organizador, ocorrências ao vivo, aprovações, check-in, trajetórias, evals | Editor completo de programação (usamos o seed), base de conhecimento com upload (no MVP, o regulamento vem do seed; upload de Markdown só se sobrar tempo) |
+| Frontend: catálogo, evento/programação, meus ingressos, chat com fontes e cartões de ação, dashboard do organizador, ocorrências ao vivo, aprovações, check-in, trajetórias, evals | Editor completo de programação (usamos o seed), base de conhecimento com upload (no MVP, o regulamento vem do seed; upload de Markdown só se sobrar tempo) |
 | Notificações gravadas no banco e mostradas no sininho | Mailpit / e-mail |
 
 **Cuidados com o Gemini free tier:**
@@ -98,7 +98,7 @@ Cada um precisa aparecer no código **e** no README:
 
 ## 3. Avaliação da ideia: o `events-tickets-ms` serve?
 
-**Serve, mas não do jeito que está.** O projeto atual é um CRUD distribuído muito bem feito, mas não tem decisões ambíguas: emitir ingresso, cancelar e fazer check-in seguem regras fixas. Colocar um chat que só chama `POST /tickets` seria o anti-padrão "agente em tudo", e o professor vai perguntar *"por que um formulário não basta?"*.
+**Serve, mas não do jeito que está.** O projeto atual é um CRUD distribuído muito bem feito, mas não tem decisões ambíguas: emitir ingresso, cancelar e fazer check-in seguem regras fixas. Colocar um chat que só chama `POST /tickets` seria o antipadrão "agente em tudo", e o professor vai perguntar *"por que um formulário não basta?"*.
 
 A ideia passa a ser válida quando mudamos **o problema** de "vender ingressos" para **"operar um evento acadêmico com uma equipe pequena"**. Aí aparecem as tarefas em que um workflow fixo não basta:
 
@@ -125,13 +125,13 @@ A ideia passa a ser válida quando mudamos **o problema** de "vender ingressos" 
 
 ## 4. Problema e usuários
 
-**Problema:** comissões organizadoras de eventos acadêmicos são pequenas, voluntárias e rotativas. Elas gastam a maior parte do tempo respondendo dúvidas repetidas e apagando incêndios de última hora, e erram ao comunicar mudanças porque ninguém sabe ao certo quem foi afetado.
+**Problema:** comissões organizadoras de eventos acadêmicos são pequenas, voluntárias e rotativas. Elas gastam a maior parte do tempo respondendo a dúvidas repetidas e apagando incêndios de última hora, e erram ao comunicar mudanças porque ninguém sabe ao certo quem foi afetado.
 
 | Persona | Objetivo | O que usa |
 |---|---|---|
 | **Participante** (estudante, público externo) | Inscrever-se, tirar dúvidas, gerenciar seus ingressos, fazer check-in | Portal do participante e Assistente |
 | **Organizador** (comissão) | Montar a programação, acompanhar inscrições, resolver ocorrências, comunicar mudanças | Painel do organizador, Agente de Operações, Central de Aprovações |
-| **Staff de credenciamento** | Fazer o check-in rápido na porta | Tela de check-in com leitor de QR Code |
+| **Staff de credenciamento** | Fazer o check-in rápido na porta | Tela de check-in por código do ingresso |
 | **Admin** | Gerenciar usuários e papéis, ver auditoria e evals | Área administrativa |
 
 **Critérios de sucesso** (mensuráveis, ver seção 14):
@@ -430,13 +430,13 @@ O resultado vai para `evals/reports/AAAA-MM-DD.json` e aparece na **tela de Eval
 
 ## 15. Frontend (produto final, não tela de teste)
 
-**Stack sugerida:** React 18 + Vite + TypeScript, **Tailwind CSS + shadcn/ui** (componentes acessíveis e com cara profissional), TanStack Query (dados), React Router, React Hook Form + Zod (formulários), Recharts (gráficos), React Flow (grafo), `qrcode.react` e um leitor de QR via câmera para o check-in. Tema claro/escuro e layout responsivo (o participante usa no celular).
+**Stack sugerida:** React 18 + Vite + TypeScript, **Tailwind CSS + shadcn/ui** (componentes acessíveis e com cara profissional), TanStack Query (dados), React Router, React Hook Form + Zod (formulários), Recharts (gráficos), React Flow (grafo). Tema claro/escuro e layout responsivo (o participante usa no celular).
 
 ### 15.1 Portal do participante (público e autenticado)
 - **Home / catálogo de eventos** com busca, filtros por categoria e data, e cards com capa.
 - **Página do evento:** descrição, programação em grade por dia/trilha, palestrantes, regulamento, botão de inscrição.
 - **Inscrição** em sessões/minicursos, com detecção de conflito de horário na hora.
-- **Meus ingressos:** cartão com **QR Code**, status e ações (cancelar, trocar, entrar na lista de espera).
+- **Meus ingressos:** cartão com o código do ingresso, status e ações (cancelar, trocar, entrar na lista de espera).
 - **Assistente (chat)** flutuante em todas as páginas, com respostas mostrando **fontes clicáveis** e **cartões de ação** ("Confirmar cancelamento?") em vez de texto solto.
 - Notificações (sininho): mudanças na programação, promoção da lista de espera.
 
@@ -444,7 +444,7 @@ O resultado vai para `evals/reports/AAAA-MM-DD.json` e aparece na **tela de Eval
 - **Dashboard:** KPIs (inscritos, ocupação, check-ins, lista de espera, no-show), gráficos e as próximas sessões.
 - **Eventos → Programação:** editor de sessões, salas e palestrantes (com conflito de horário destacado).
 - **Inscritos:** tabela com filtros, exportação CSV e histórico de cada ingresso.
-- **Check-in:** leitor de QR em tela cheia para o staff, com feedback visual grande (verde/vermelho).
+- **Check-in:** registro de presença pelo código do ingresso, para o staff, com feedback visual grande (verde/vermelho).
 - **Ocorrências:** caixa de texto "o que aconteceu?" → run do Agente de Operações **em tempo real (SSE)**, mostrando cada passo; ao final, o plano proposto.
 - **Central de aprovações:** propostas `PENDING` com diff do que vai mudar, quantidade de afetados, comunicado revisado e os botões Aprovar, Editar ou Rejeitar.
 - **Base de conhecimento:** upload de regulamento/FAQ, versões, status de indexação.
@@ -545,7 +545,7 @@ tads-eventos-agentes/
     └── src/
         ├── app/                   # rotas, providers, layout
         ├── components/ui/         # shadcn/ui
-        ├── components/            # EventCard, TicketQR, ChatWidget, ActionCard, RunTimeline, GraphView…
+        ├── components/            # EventCard, TicketCard, ChatWidget, ActionCard, RunTimeline, GraphView…
         ├── features/
         │   ├── catalog/  ├── event-page/  ├── my-tickets/  ├── assistant/
         │   ├── organizer/ (dashboard, schedule, attendees, checkin, incidents, approvals, knowledge, graph)
@@ -578,7 +578,7 @@ tads-eventos-agentes/
 
 ## 19. Roteiro de demonstração (rascunho)
 
-1. **Participante (celular):** catálogo → inscrição em 2 minicursos → conflito de horário bloqueado → QR Code.
+1. **Participante (celular):** catálogo → inscrição em 2 minicursos → conflito de horário bloqueado → ingresso com código.
 2. **Assistente:** "Tem certificado do minicurso de Docker? Quantas horas?" → resposta com fonte (seção 4.2 do regulamento).
 3. **Abstenção:** "Vai ter almoço?" → "não encontrei no regulamento; quer que eu encaminhe à comissão?".
 4. **Governança:** "Mostre o ingresso EVT-2026-XXXX" (de outra pessoa) → recusa, com o trace mostrando o 403.
@@ -613,10 +613,10 @@ tads-eventos-agentes/
 |---|---|---|---|
 | **1 · Fundação + núcleo agêntico** | backend e banco, domínio, agentic core | `docker-compose.yml` (postgres, backend, frontend); auth JWT com papéis; módulos `events`, `sessions` (salas e palestrantes), `tickets` (reserva atômica, check-in, cancelamento, troca), `approvals`, `activity`, `notifications`; **seed** "Semana Acadêmica FACOM 2026" + regulamento.md; ports, `FakeModel`, `GeminiAdapter`, orquestrador (estados, budget, timeout, retry, circuit breaker), Tool Registry/Gateway, tracing | `pytest` verde para o domínio e para a orquestração com `FakeModel` |
 | **2 · Agentes** | os 3 agentes ponta a ponta pela API | busca full-text com proveniência; Assistente do Participante (tools L0/L1/L2 e propostas que o usuário confirma); grafo (CTE) e tools de Operações; Revisor (checagens determinísticas + LLM); `ActionPlan` → aprovação → execução idempotente → notificações; endpoint de chat e ocorrências com **SSE**; runner de evals com ~20 casos | demo inteira funcionando pelo Swagger e os evals rodando |
-| **3 · Frontend** | produto | layout, tema, auth; catálogo, evento/programação, meus ingressos (QR), chat com fontes e cartões de ação; painel: dashboard, ocorrências ao vivo, central de aprovações, check-in por QR, trajetórias, evals | o roteiro de demo (seção 19) roda inteiro pela UI |
+| **3 · Frontend** | produto | layout, tema, auth; catálogo, evento/programação, meus ingressos, chat com fontes e cartões de ação; painel: dashboard, ocorrências ao vivo, central de aprovações, check-in por código, trajetórias, evals | o roteiro de demo (seção 19) roda inteiro pela UI |
 | **4 · Qualidade + entrega** | robustez e documentação | guardrail de injeção + documento envenenado no seed; modo degradado; ajustes dos evals até as metas; README arquitetural ("Requisitos atendidos", diagramas, demo), `docs/decisoes.md`, `agentes.md`, `contratos-tools.md`, `evals.md`; vídeo; ensaio | checklist da seção 2 inteiro marcado |
 
-**Regra de corte:** se um dia atrasar, o que cai primeiro é a tela de evals (o relatório em JSON/Markdown basta), depois o QR por câmera (vira campo de texto com o código) e depois a troca de sessão (fica só o cancelamento).
+**Regra de corte:** se um dia atrasar, o que cai primeiro é a tela de evals (o relatório em JSON/Markdown basta) e depois a troca de sessão (fica só o cancelamento).
 
 ---
 

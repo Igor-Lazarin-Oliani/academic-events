@@ -1,5 +1,5 @@
 import { createContext, forwardRef, useCallback, useContext, useEffect, useState, type ButtonHTMLAttributes, type HTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from "react";
-import { CheckCircle2, Loader2, X, XCircle, Info } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight, Loader2, X, XCircle, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /* ---------------- Button ---------------- */
@@ -127,6 +127,28 @@ export function Tabs<T extends string>({ value, onChange, items, className }: { 
           {it.count !== undefined && <span className="ml-1.5 rounded-full bg-border/70 px-1.5 text-xs">{it.count}</span>}
         </button>
       ))}
+    </div>
+  );
+}
+
+/* ---------------- Pagination ---------------- */
+export function Pagination({ page, pageSize, total, onPageChange, loading, className }: { page: number; pageSize: number; total: number; onPageChange: (p: number) => void; loading?: boolean; className?: string }) {
+  const pages = Math.max(1, Math.ceil(total / pageSize));
+  // Se a página atual deixou de existir (ex.: itens resolvidos/arquivados), volta para a última válida.
+  useEffect(() => { if (!loading && page > 0 && page >= pages) onPageChange(pages - 1); }, [loading, page, pages, onPageChange]);
+  if (total === 0) return null;
+  const first = page * pageSize + 1;
+  const last = Math.min(total, (page + 1) * pageSize);
+  return (
+    <div className={cn("mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4", className)}>
+      <span className="text-xs text-subtle">Mostrando {first.toLocaleString("pt-BR")}–{last.toLocaleString("pt-BR")} de {total.toLocaleString("pt-BR")}</span>
+      {pages > 1 && (
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" disabled={page === 0 || loading} onClick={() => onPageChange(page - 1)}><ChevronLeft className="h-4 w-4" />Anterior</Button>
+          <span className="text-xs tabular-nums text-subtle">Página {page + 1} de {pages}</span>
+          <Button size="sm" variant="outline" disabled={page >= pages - 1 || loading} onClick={() => onPageChange(page + 1)}>Próxima<ChevronRight className="h-4 w-4" /></Button>
+        </div>
+      )}
     </div>
   );
 }

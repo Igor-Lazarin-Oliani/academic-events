@@ -20,9 +20,9 @@ O sistema tem **3 agentes**, usados só onde há linguagem livre ou investigaç�
 - Monta o **plano** e **escreve o comunicado**. **Não executa nada**: o sistema simula o plano, o Revisor confere e o plano vai para a **Central de Aprovações**; só a aprovação de um organizador aplica as mudanças e notifica os inscritos.
 
 **3. Agente Revisor** (dentro do fluxo de Operações). Confere o comunicado antes de ele chegar ao organizador.
-- **Em código:** toda data, horário, sala e sessão citados precisam bater com o plano validado (ex.: o texto diz "10h00", mas o novo horário é "08h00" → reprova).
+- **Em código:** todas as datas, horários, salas e sessões citados precisam bater com o plano validado (ex.: o texto diz "10h00", mas o novo horário é "08h00" → reprova).
 - **Pelo modelo:** clareza, completude e promessas além dos fatos.
-- Se reprovar, devolve ao Agente de Operações com os problemas apontados, que corrige no máximo 2 vezes.
+- Se reprovar, devolve o comunicado ao Agente de Operações com os problemas apontados, e o agente o corrige no máximo 2 vezes.
 
 **O que nenhum agente pode fazer:** aprovar, executar mudanças, notificar inscritos ou ver nomes e e-mails de participantes. Os agentes **propõem**; pessoas e código **decidem e executam**. Cada execução fica registrada passo a passo na tela **Trajetórias**.
 
@@ -80,7 +80,7 @@ Um participante nunca chega ao Agente de Operações: isso não é decidido pelo
 | Decisão delegada | aprovar ou devolver com problemas objetivos e sugestões |
 | Padrão | evaluator (checagens determinísticas + LLM como função, com saída JSON por schema) |
 | Modelo | tier `light`; se indisponível, valem só as checagens determinísticas (registrado como `llm_skipped`) |
-| Checagens determinísticas | todo horário, data, sala e sessão citados existem nos fatos do dry-run; o novo horário e a nova sala são citados; tamanho de título e corpo |
+| Checagens determinísticas | todos os horários, datas, salas e sessões citados existem nos fatos do dry-run; o novo horário e a nova sala são citados; tamanho de título e corpo |
 | Tools | nenhuma |
 | Término | uma chamada (parecer) |
 | Testes | `test_agents.py` (reprova horário errado) + evals `R01`/`R02` |

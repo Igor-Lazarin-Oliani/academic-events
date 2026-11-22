@@ -1,12 +1,13 @@
 """Human-in-the-loop. O agente chama create_*; humanos chamam decide() por uma rota que NÃO é uma tool."""
 
 from pydantic import ValidationError
-from sqlalchemy import func, select
+from sqlalchemy import Select, and_, func, or_, select
 from sqlalchemy.orm import Session as DbSession
 
 from app.core.database import utcnow
-from app.core.deps import can_manage_event
+from app.core.deps import can_manage_event, managed_event_ids
 from app.core.errors import Conflict, DomainError, Forbidden, NotFound
+from app.core.pagination import split_values, text_filter
 from app.modules.activity.service import record
 from app.modules.approvals.models import ActionProposal, ProposalKind, ProposalStatus
 from app.modules.approvals.plan_steps import apply_step, parse_steps
@@ -146,15 +147,29 @@ def _run(db: DbSession, p: ActionProposal, actor: User) -> dict:
     raise DomainError(f"Unknown proposal kind {p.kind}")
 
 
-def list_proposals(db: DbSession, *, user: User, status: str | None = None, event_id: str | None = None, kind: str | None = None) -> list[ActionProposal]:
-    stmt = select(ActionProposal).order_by(ActionProposal.created_at.desc())
-    if status:
-        stmt = stmt.where(ActionProposal.status == status)
+def proposals_query(db: DbSession, *, user: User, status: str | None = None, event_id: str | None = None, kind: str | None = None,
+                    q: str | None = None) -> Select:
+    """Propostas visíveis ao usuário, filtradas no banco (para paginar corretamente).
+    Visibilidade: admin vê tudo; os demais veem as próprias e as L3 dos eventos que gerenciam.
+    `status` aceita vários valores separados por vírgula; `q` busca em título e resumo."""
+    stmt = select(ActionProposal)
+    statuses = split_values(status)
+    if statuses:
+        stmt = stmt.where(ActionProposal.status.in_(statuses))
     if kind:
         stmt = stmt.where(ActionProposal.kind == kind)
     if event_id:
         stmt = stmt.where(ActionProposal.event_id == event_id)
-    items = list(db.scalars(stmt.limit(200)))
-    if user.role == "admin":
-        return items
-    return [p for p in items if p.requested_by == user.id or (p.level == "L3" and can_manage_event(db, user, p.event_id))]
+    cond = text_filter(q, ActionProposal.title, ActionProposal.summary)
+    if cond is not None:
+        stmt = stmt.where(cond)
+    if user.role != "admin":
+        managed = (managed_event_ids(db, user) or set()) if user.role in ("organizer", "staff") else set()
+        stmt = stmt.where(or_(ActionProposal.requested_by == user.id,
+                              and_(ActionProposal.level == "L3", ActionProposal.event_id.in_(managed))))
+    return stmt.order_by(ActionProposal.created_at.desc(), ActionProposal.id)
+
+
+def list_proposals(db: DbSession, *, user: User, status: str | None = None, event_id: str | None = None, kind: str | None = None,
+                   limit: int = 200) -> list[ActionProposal]:
+    return list(db.scalars(proposals_query(db, user=user, status=status, event_id=event_id, kind=kind).limit(limit)))

@@ -1,9 +1,10 @@
-from sqlalchemy import select
+from sqlalchemy import Select, select
 from sqlalchemy.orm import Session as DbSession
 
 from app.core.correlation import current_correlation_id
 from app.core.database import utcnow
 from app.core.errors import Conflict, NotFound
+from app.core.pagination import text_filter
 from app.modules.activity.models import ActivityLog
 
 
@@ -37,8 +38,7 @@ def record(
     return log
 
 
-def list_logs(
-    db: DbSession,
+def logs_query(
     *,
     entity_type: str | None = None,
     entity_id: str | None = None,
@@ -48,10 +48,10 @@ def list_logs(
     status: str | None = None,
     correlation_id: str | None = None,
     include_archived: bool = False,
-    limit: int = 100,
-    offset: int = 0,
-) -> list[ActivityLog]:
-    q = select(ActivityLog)
+    q: str | None = None,
+) -> Select:
+    """Consulta filtrada (sem paginação). `q` busca em ação, mensagem, id da entidade e correlation_id."""
+    stmt = select(ActivityLog)
     for col, val in (
         (ActivityLog.entity_type, entity_type),
         (ActivityLog.entity_id, entity_id),
@@ -62,11 +62,17 @@ def list_logs(
         (ActivityLog.correlation_id, correlation_id),
     ):
         if val:
-            q = q.where(col == val)
+            stmt = stmt.where(col == val)
     if not include_archived:
-        q = q.where(ActivityLog.archived_at.is_(None))
-    q = q.order_by(ActivityLog.occurred_at.desc()).limit(limit).offset(offset)
-    return list(db.scalars(q))
+        stmt = stmt.where(ActivityLog.archived_at.is_(None))
+    cond = text_filter(q, ActivityLog.action, ActivityLog.message, ActivityLog.entity_id, ActivityLog.correlation_id)
+    if cond is not None:
+        stmt = stmt.where(cond)
+    return stmt.order_by(ActivityLog.occurred_at.desc(), ActivityLog.id)
+
+
+def list_logs(db: DbSession, *, limit: int = 100, offset: int = 0, **filters) -> list[ActivityLog]:
+    return list(db.scalars(logs_query(**filters).limit(limit).offset(offset)))
 
 
 def triage(db: DbSession, log_id: str, *, status: str | None, notes: str | None) -> ActivityLog:

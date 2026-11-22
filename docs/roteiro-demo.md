@@ -13,7 +13,7 @@ Duração-alvo: **8 a 10 minutos**. Cada bloco indica o critério de avaliação
 ## 1. O problema (1 min) · *Problema e justificativa (15%)*
 
 Mostrar a home. Fala:
-> "Comissões de eventos acadêmicos são pequenas e voluntárias. Na semana do evento, elas respondem as mesmas dúvidas no WhatsApp e apagam incêndios sem saber quem é afetado. Vagas e check-in são regras fixas e continuam em código; usamos agentes só onde há linguagem livre e investigação."
+> "Comissões de eventos acadêmicos são pequenas e voluntárias. Na semana do evento, elas respondem às mesmas dúvidas no WhatsApp e apagam incêndios sem saber quem é afetado. Vagas e check-in são regras fixas e continuam em código; usamos agentes só onde há linguagem livre e investigação."
 
 ## 2. Participante (2 min) · *Contexto e evidência (15%)*
 

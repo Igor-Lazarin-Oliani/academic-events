@@ -1,10 +1,10 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { NavLink, Navigate, Outlet, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Activity, Bot, CheckSquare, ClipboardList, FlaskConical, GitBranch, Inbox, LayoutDashboard, Menu, MessageSquareWarning, QrCode, Route, Siren, Users, X } from "lucide-react";
+import { Activity, Bot, CheckSquare, ClipboardCheck, ClipboardList, FlaskConical, GitBranch, Inbox, LayoutDashboard, Menu, MessageSquareWarning, Route, Siren, Users, X } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import type { EventSummary, Proposal } from "@/lib/types";
+import type { EventSummary, Page, Proposal } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Select, Spinner } from "@/components/ui";
 import { Logo, NotificationsBell, ThemeToggle, UserMenu } from "./common";
@@ -19,7 +19,7 @@ const NAV = [
     { to: "/painel/ocorrencias", label: "Ocorrências", icon: Siren, roles: ["organizer", "admin"] },
     { to: "/painel/aprovacoes", label: "Aprovações", icon: CheckSquare, roles: ["organizer", "admin"], badge: "approvals" },
     { to: "/painel/inscritos", label: "Inscritos", icon: Users, roles: ["organizer", "admin", "staff"] },
-    { to: "/painel/checkin", label: "Check-in", icon: QrCode, roles: ["organizer", "admin", "staff"] },
+    { to: "/painel/checkin", label: "Check-in", icon: ClipboardCheck, roles: ["organizer", "admin", "staff"] },
     { to: "/painel/chamados", label: "Chamados", icon: Inbox, roles: ["organizer", "admin"] },
   ]},
   { group: "Conhecimento", items: [
@@ -48,9 +48,9 @@ export function PanelLayout() {
   const [eventId, setEventIdState] = useState<string | null>(() => { try { return localStorage.getItem("ae.panelEvent"); } catch { return null; } });
   const event = events.find((e) => e.id === eventId) ?? events[0] ?? null;
   const setEventId = (id: string) => { setEventIdState(id); try { localStorage.setItem("ae.panelEvent", id); } catch { /* ignore */ } };
-  const { data: pending = [] } = useQuery({
+  const { data: pendingTotal = 0 } = useQuery({
     queryKey: ["proposals", "pending", event?.id], enabled: !!event && user?.role !== "staff", refetchInterval: 15_000,
-    queryFn: () => api<Proposal[]>(`/proposals?status=PENDING&kind=ACTION_PLAN&event_id=${event!.id}`),
+    queryFn: () => api<Page<Proposal>>(`/proposals?status=PENDING&kind=ACTION_PLAN&event_id=${event!.id}`), select: (p) => p.total,
   });
 
   if (loading) return <div className="grid h-full place-items-center"><Spinner /></div>;
@@ -79,7 +79,7 @@ export function PanelLayout() {
                   className={({ isActive }) => cn("flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition", isActive ? "bg-brand-soft text-brand" : "text-subtle hover:bg-muted hover:text-fg")}>
                   <i.icon className="h-4 w-4" />
                   {i.label}
-                  {(i as any).badge === "approvals" && pending.length > 0 && <span className="ml-auto rounded-full bg-accent px-1.5 text-xs font-bold text-black">{pending.length}</span>}
+                  {(i as any).badge === "approvals" && pendingTotal > 0 && <span className="ml-auto rounded-full bg-accent px-1.5 text-xs font-bold text-black">{pendingTotal}</span>}
                 </NavLink>
               ))}
             </div>

@@ -54,3 +54,6 @@ export interface Activity {
   actor_id: string | null; actor_role: string | null; correlation_id: string | null; message: string; payload: any; status: string; notes: string | null;
 }
 export interface KnowledgeDoc { id: string; source_id: string; title: string; source_path: string; version: number; status: string; trust: string; updated_at: string; sections: number }
+
+/** Envelope das listagens paginadas do backend. */
+export interface Page<T> { items: T[]; total: number; limit: number; offset: number }

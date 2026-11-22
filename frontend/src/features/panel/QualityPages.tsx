@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Archive, Bot, CheckCircle2, ChevronLeft, ChevronRight, FlaskConical, Layers, ShieldCheck, Wrench, XCircle } from "lucide-react";
+import { Archive, Bot, CheckCircle2, FlaskConical, Layers, Search, ShieldCheck, Wrench, XCircle } from "lucide-react";
 import { api } from "@/lib/api";
-import type { Activity } from "@/lib/types";
-import { cn, fmt } from "@/lib/utils";
-import { Badge, Button, Card, CardBody, CardHeader, EmptyState, ErrorBox, PageHeader, Progress, Select, Skeleton, Stat } from "@/components/ui";
+import { pageQuery, useDebounced, usePagination } from "@/lib/pagination";
+import type { Activity, Page } from "@/lib/types";
+import { cn, fmt, plural } from "@/lib/utils";
+import { Badge, Button, Card, CardBody, CardHeader, EmptyState, ErrorBox, Input, PageHeader, Pagination, Progress, Select, Skeleton, Stat } from "@/components/ui";
 import { usePanelEvent } from "@/components/layout/PanelLayout";
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -114,21 +115,17 @@ export function AgentsPage() {
 }
 
 /* ---------------- Auditoria ---------------- */
-const AUDIT_PAGE_SIZE = 25;
 export function AuditPage() {
   const { event } = usePanelEvent();
   const [source, setSource] = useState("");
   const [entity, setEntity] = useState("");
-  const [page, setPage] = useState(0);
-  // Busca uma linha a mais que o tamanho da página só para saber se existe próxima página.
-  const qs = new URLSearchParams({ limit: String(AUDIT_PAGE_SIZE + 1), offset: String(page * AUDIT_PAGE_SIZE), ...(source && { source }), ...(entity && { entity_type: entity }) });
-  const { data: raw = [], isLoading, isFetching, error } = useQuery({ queryKey: ["activity", qs.toString()], queryFn: () => api<Activity[]>(`/activity?${qs}`), placeholderData: keepPreviousData });
-  const hasNext = raw.length > AUDIT_PAGE_SIZE;
-  const data = raw.slice(0, AUDIT_PAGE_SIZE);
-  const first = data.length ? page * AUDIT_PAGE_SIZE + 1 : 0;
-  const last = page * AUDIT_PAGE_SIZE + data.length;
-  // Se a página atual ficou vazia (ex.: após arquivar o último item), volta uma página.
-  useEffect(() => { if (!isLoading && !isFetching && page > 0 && raw.length === 0) setPage((p) => p - 1); }, [isLoading, isFetching, page, raw.length]);
+  const [q, setQ] = useState("");
+  const search = useDebounced(q.trim());
+  const pg = usePagination(`${source}|${entity}|${search}`);
+  const qs = pageQuery({ source, entity_type: entity, q: search }, pg);
+  const { data: pageData, isLoading, isFetching, error } = useQuery({ queryKey: ["activity", qs.toString()], queryFn: () => api<Page<Activity>>(`/activity?${qs}`), placeholderData: keepPreviousData });
+  const data = pageData?.items ?? [];
+  const total = pageData?.total ?? 0;
   const qc = useQueryClient();
   const triage = useMutation({ mutationFn: ({ id, status }: { id: string; status: string }) => api(`/activity/${id}`, { method: "PUT", body: { status } }), onSuccess: () => qc.invalidateQueries({ queryKey: ["activity"] }) });
   const archive = useMutation({ mutationFn: (id: string) => api(`/activity/${id}`, { method: "DELETE" }), onSuccess: () => qc.invalidateQueries({ queryKey: ["activity"] }) });
@@ -136,14 +133,15 @@ export function AuditPage() {
     <div>
       <PageHeader eyebrow="Auditoria" title="Registro de atividades" description={`Cada mudança (por humanos, pelo sistema ou originada por agentes) gravada na mesma transação, com ator e correlation_id. O fato é imutável; só a triagem muda. ${event?.title ?? ""}`} />
       <Card>
-        <CardHeader title={data.length ? `Registros ${first}–${last}` : "Nenhum registro"} action={
-          <div className="flex gap-2">
-            <Select className="h-9 w-36" value={source} onChange={(e) => { setSource(e.target.value); setPage(0); }}><option value="">Todas as origens</option><option value="agent">Agente</option><option value="api">API (humano)</option><option value="system">Sistema</option></Select>
-            <Select className="h-9 w-36" value={entity} onChange={(e) => { setEntity(e.target.value); setPage(0); }}><option value="">Todas as entidades</option>{["proposal", "session", "ticket", "room", "support_request", "event"].map((x) => <option key={x}>{x}</option>)}</Select>
+        <CardHeader title={total ? plural(total, "registro", "registros") : "Nenhum registro"} action={
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <div className="relative"><Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-subtle" /><Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ação, mensagem ou id" className="h-9 pl-9 sm:w-56" /></div>
+            <Select className="h-9 shrink-0 sm:w-48" value={source} onChange={(e) => setSource(e.target.value)}><option value="">Todas as origens</option><option value="agent">Agente</option><option value="api">API (humano)</option><option value="system">Sistema</option></Select>
+            <Select className="h-9 shrink-0 sm:w-52" value={entity} onChange={(e) => setEntity(e.target.value)}><option value="">Todas as entidades</option>{["proposal", "session", "ticket", "room", "support_request", "event"].map((x) => <option key={x}>{x}</option>)}</Select>
           </div>} />
         <CardBody className="overflow-x-auto">
           {error ? <ErrorBox error={error} /> : isLoading ? <Skeleton className="h-64" /> : (
-            <table className="w-full min-w-[820px] text-sm">
+            <table className={cn("w-full min-w-[820px] text-sm transition-opacity", isFetching && "opacity-60")}>
               <thead><tr className="text-left text-xs text-subtle"><th className="pb-2">Quando</th><th className="pb-2">Ação</th><th className="pb-2">Origem</th><th className="pb-2">Detalhe</th><th className="pb-2">Triagem</th><th /></tr></thead>
               <tbody className="divide-y divide-border">
                 {data.map((l) => (
@@ -159,15 +157,7 @@ export function AuditPage() {
               </tbody>
             </table>
           )}
-          {!error && !isLoading && (page > 0 || hasNext) && (
-            <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
-              <span className="text-xs text-subtle">Página {page + 1}</span>
-              <div className="flex gap-2">
-                <Button size="sm" variant="outline" disabled={page === 0 || isFetching} onClick={() => setPage((p) => p - 1)}><ChevronLeft className="h-4 w-4" />Anterior</Button>
-                <Button size="sm" variant="outline" disabled={!hasNext || isFetching} onClick={() => setPage((p) => p + 1)}>Próxima<ChevronRight className="h-4 w-4" /></Button>
-              </div>
-            </div>
-          )}
+          {!error && !isLoading && <Pagination page={pg.page} pageSize={pg.pageSize} total={total} onPageChange={pg.setPage} loading={isFetching} />}
         </CardBody>
       </Card>
     </div>

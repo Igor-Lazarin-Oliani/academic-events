@@ -102,7 +102,7 @@ O Agente de Operações não tem um passo de notificação: o grafo acrescenta `
 
 **Status:** Em vigor.
 
-As checagens objetivas (horário, data, sala e sessão citados batem com os fatos do dry-run; os novos valores aparecem) são código, porque um LLM pode aprovar um comunicado com horário errado, e isso não pode depender do modelo. O teste do grafo simula exatamente esse caso: o LLM do Revisor aprova, a checagem determinística reprova e o agente corrige. O LLM avalia o que é semântico (clareza, completude, promessas indevidas) com saída JSON por schema. Se o LLM cair, valem só as checagens determinísticas, e isso fica registrado.
+As checagens objetivas (horários, datas, salas e sessões citados batem com os fatos do dry-run; os novos valores aparecem) são código, porque um LLM pode aprovar um comunicado com horário errado, e isso não pode depender do modelo. O teste do grafo simula exatamente esse caso: o LLM do Revisor aprova, a checagem determinística reprova e o agente corrige. O LLM avalia o que é semântico (clareza, completude, promessas indevidas) com saída JSON por schema. Se o LLM cair, valem só as checagens determinísticas, e isso fica registrado.
 
 ## D18: Frontend como produto, com a trajetória do agente visível
 

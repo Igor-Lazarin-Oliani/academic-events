@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session as DbSession
 
 from app.core.database import get_db
 from app.core.deps import ensure_can_manage_event, get_current_user, managed_event_ids, require_roles
+from app.core.pagination import Page, PageParams, paginate, split_values, text_filter
 from app.modules.auth.models import User
 from app.modules.notifications import service
 from app.modules.notifications.models import SupportRequest
@@ -56,15 +57,24 @@ def my_requests(user: User = Depends(get_current_user), db: DbSession = Depends(
     return list(db.scalars(select(SupportRequest).where(SupportRequest.user_id == user.id).order_by(SupportRequest.created_at.desc())))
 
 
-@router.get("/support-requests", response_model=list[SupportOut])
-def list_requests(status: str | None = None, user: User = Depends(require_roles("organizer", "admin")), db: DbSession = Depends(get_db)):
-    stmt = select(SupportRequest).order_by(SupportRequest.created_at.desc())
-    if status:
-        stmt = stmt.where(SupportRequest.status == status)
+@router.get("/support-requests", response_model=Page[SupportOut])
+def list_requests(status: str | None = None, event_id: str | None = None, q: str | None = None, page: PageParams = Depends(),
+                  user: User = Depends(require_roles("organizer", "admin")), db: DbSession = Depends(get_db)):
+    """Chamados paginados. `status` aceita vários valores separados por vírgula (ex.: ANSWERED,CLOSED)."""
+    stmt = select(SupportRequest)
+    statuses = split_values(status)
+    if statuses:
+        stmt = stmt.where(SupportRequest.status.in_(statuses))
+    if event_id:
+        ensure_can_manage_event(db, user, event_id)
+        stmt = stmt.where(SupportRequest.event_id == event_id)
     ids = managed_event_ids(db, user)
     if ids is not None:
         stmt = stmt.where(SupportRequest.event_id.in_(ids))
-    return list(db.scalars(stmt))
+    cond = text_filter(q, SupportRequest.summary, SupportRequest.answer)
+    if cond is not None:
+        stmt = stmt.where(cond)
+    return paginate(db, stmt.order_by(SupportRequest.created_at.desc(), SupportRequest.id), page)
 
 
 @router.post("/support-requests/{req_id}/answer", response_model=SupportOut)

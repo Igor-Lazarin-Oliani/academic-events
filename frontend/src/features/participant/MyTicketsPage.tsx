@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { QRCodeSVG } from "qrcode.react";
-import { Award, Inbox, MessageSquareText, QrCode, Ticket as TicketIcon } from "lucide-react";
+import { Award, Inbox, MessageSquareText, Ticket as TicketIcon } from "lucide-react";
 import { api, friendlyError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import type { Proposal, SupportRequest, Ticket } from "@/lib/types";
-import { cn, fmt, TICKET_STATUS } from "@/lib/utils";
+import type { Page, Proposal, SupportRequest, Ticket } from "@/lib/types";
+import { cn, fmt, pluralWord, TICKET_STATUS } from "@/lib/utils";
 import { Badge, Button, Card, CardBody, CardHeader, Dialog, EmptyState, PageHeader, Skeleton, Tabs, Textarea, useToast } from "@/components/ui";
 import { SessionBadges, SessionMeta } from "@/components/shared";
 import { ProposalCard } from "@/features/assistant/ProposalCard";
@@ -15,7 +14,7 @@ export function MyTicketsPage() {
   const { user, loading } = useAuth();
   const [tab, setTab] = useState<"active" | "past">("active");
   const { data: tickets = [], isLoading } = useQuery({ queryKey: ["my-tickets", "all"], enabled: !!user, queryFn: () => api<Ticket[]>("/me/tickets") });
-  const { data: proposals = [] } = useQuery({ queryKey: ["my-proposals"], enabled: !!user, queryFn: () => api<Proposal[]>("/proposals?status=PENDING") });
+  const { data: proposals = [] } = useQuery({ queryKey: ["my-proposals"], enabled: !!user, queryFn: () => api<Page<Proposal>>("/proposals?status=PENDING"), select: (p) => p.items });
   const { data: requests = [] } = useQuery({ queryKey: ["my-requests"], enabled: !!user, queryFn: () => api<SupportRequest[]>("/me/support-requests") });
   if (loading) return null;
   if (!user) return <Navigate to="/entrar?next=/meus-ingressos" replace />;
@@ -27,11 +26,11 @@ export function MyTicketsPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
-      <PageHeader eyebrow="Minha conta" title="Meus ingressos" description="Apresente o QR Code na porta da sala para registrar presença e garantir o certificado." />
+      <PageHeader eyebrow="Minha conta" title="Meus ingressos" description="Informe o código do ingresso na porta da sala para registrar presença e garantir o certificado." />
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
-        <Card className="flex items-center gap-4 p-5"><TicketIcon className="h-8 w-8 text-brand" /><div><p className="text-2xl font-bold">{active.length}</p><p className="text-sm text-subtle">inscrições ativas</p></div></Card>
+        <Card className="flex items-center gap-4 p-5"><TicketIcon className="h-8 w-8 text-brand" /><div><p className="text-2xl font-bold">{active.length}</p><p className="text-sm text-subtle">{pluralWord(active.length, "inscrição ativa", "inscrições ativas")}</p></div></Card>
         <Card className="flex items-center gap-4 p-5"><Award className="h-8 w-8 text-accent" /><div><p className="text-2xl font-bold">{hours}h</p><p className="text-sm text-subtle">com presença registrada</p></div></Card>
-        <Card className="flex items-center gap-4 p-5"><MessageSquareText className="h-8 w-8 text-ok" /><div><p className="text-2xl font-bold">{requests.length}</p><p className="text-sm text-subtle">chamados com a comissão</p></div></Card>
+        <Card className="flex items-center gap-4 p-5"><MessageSquareText className="h-8 w-8 text-ok" /><div><p className="text-2xl font-bold">{requests.length}</p><p className="text-sm text-subtle">{pluralWord(requests.length, "chamado com a comissão", "chamados com a comissão")}</p></div></Card>
       </div>
 
       {myL2.length > 0 && (
@@ -69,7 +68,6 @@ export function MyTicketsPage() {
 
 function TicketCard({ t }: { t: Ticket }) {
   const s = t.session!;
-  const [qr, setQr] = useState(false);
   const [cancel, setCancel] = useState(false);
   const [reason, setReason] = useState("");
   const qc = useQueryClient();
@@ -89,25 +87,11 @@ function TicketCard({ t }: { t: Ticket }) {
         <div className="mt-3"><SessionBadges s={s} /></div>
         {t.status === "CONFIRMED" && (
           <div className="mt-4 flex gap-2">
-            <Button size="sm" variant="outline" onClick={() => setQr(true)} className="sm:hidden"><QrCode className="h-4 w-4" />QR Code</Button>
             <Button size="sm" variant="ghost" className="text-danger" onClick={() => setCancel(true)}>Cancelar inscrição</Button>
           </div>
         )}
         {t.cancel_reason && <p className="mt-3 text-xs text-subtle">Motivo: {t.cancel_reason.startsWith("plan:") ? "sessão cancelada pela comissão" : t.cancel_reason}</p>}
       </div>
-      {t.status === "CONFIRMED" && (
-        <button onClick={() => setQr(true)} className="hidden w-40 flex-col items-center justify-center gap-2 border-l border-dashed border-border bg-muted/40 p-4 sm:flex" aria-label="Ampliar QR Code">
-          <div className="rounded-lg bg-white p-2"><QRCodeSVG value={t.ticket_code} size={96} /></div>
-          <span className="text-[11px] text-subtle">toque para ampliar</span>
-        </button>
-      )}
-      <Dialog open={qr} onClose={() => setQr(false)} title={s.title} description={`${fmt.weekday(s.start_at)}, ${fmt.date(s.start_at)} · ${fmt.range(s.start_at, s.end_at)} · ${s.room?.name ?? ""}`}>
-        <div className="flex flex-col items-center gap-3 py-2">
-          <div className="rounded-2xl bg-white p-4"><QRCodeSVG value={t.ticket_code} size={240} /></div>
-          <p className="font-mono text-lg font-semibold tracking-wider">{t.ticket_code}</p>
-          <p className="text-sm text-subtle">Mostre na porta da sala. A tolerância é de 15 minutos.</p>
-        </div>
-      </Dialog>
       <Dialog open={cancel} onClose={() => setCancel(false)} title="Cancelar inscrição?" description={`${s.code} · ${s.title}`}
         footer={<><Button variant="ghost" onClick={() => setCancel(false)}>Voltar</Button><Button variant="danger" loading={mutation.isPending} onClick={() => mutation.mutate()}>Cancelar inscrição</Button></>}>
         <p className="mb-3 text-sm text-subtle">A vaga volta a ficar disponível para outros participantes imediatamente.</p>

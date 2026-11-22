@@ -52,6 +52,22 @@ export async function api<T = any>(path: string, opts: { method?: string; body?:
   return data as T;
 }
 
+/** GET autenticado que baixa a resposta como arquivo (ex.: exportação CSV gerada no servidor). */
+export async function apiDownload(path: string, filename: string): Promise<void> {
+  const token = getToken();
+  const res = await fetch(BASE + path, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    throw new ApiError(res.status, data?.error?.message ?? `Erro ${res.status}`, data?.error?.code);
+  }
+  const url = URL.createObjectURL(await res.blob());
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 /** POST com resposta em Server-Sent Events (trajetória do agente ao vivo). */
 export async function streamPost(path: string, body: any, handlers: { onStep?: (s: any) => void; onResult?: (r: any) => void; onError?: (e: any) => void }, signal?: AbortSignal) {
   const token = getToken();

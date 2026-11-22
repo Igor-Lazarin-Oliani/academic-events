@@ -1,4 +1,4 @@
-"""ModelPort: o que o orquestrador precisa de um LLM, independente do provedor."""
+"""ModelPort: o que o orquestrador precisa de um LLM, independentemente do provedor."""
 
 from dataclasses import dataclass, field
 from typing import Any, Protocol

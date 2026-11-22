@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, CalendarDays, MapPin, Search, ShieldCheck, Sparkles, Users } from "lucide-react";
 import { api } from "@/lib/api";
 import type { EventSummary } from "@/lib/types";
-import { fmt } from "@/lib/utils";
+import { fmt, plural, pluralWord } from "@/lib/utils";
 import { Badge, Card, EmptyState, Input, Skeleton } from "@/components/ui";
 import { EventCover } from "@/components/shared";
 
@@ -22,7 +22,7 @@ export function CatalogPage() {
           <div>
             <Badge tone="brand"><Sparkles className="h-3 w-3" />Com assistente de IA que cita as fontes</Badge>
             <h1 className="mt-4 text-4xl font-extrabold leading-tight sm:text-5xl">Eventos acadêmicos sem fila de dúvidas no WhatsApp.</h1>
-            <p className="mt-4 max-w-xl text-lg text-subtle">Inscreva-se nas sessões, receba seu ingresso com QR Code e tire dúvidas com um assistente que responde pelo regulamento oficial. A comissão resolve imprevistos com um agente que investiga o impacto e propõe o plano.</p>
+            <p className="mt-4 max-w-xl text-lg text-subtle">Inscreva-se nas sessões, receba seu ingresso digital e tire dúvidas com um assistente que responde pelo regulamento oficial. A comissão resolve imprevistos com um agente que investiga o impacto e propõe o plano.</p>
             <div className="mt-6 flex flex-wrap gap-3 text-sm text-subtle">
               <span className="flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-ok" />Nenhuma ação sem sua confirmação</span>
               <span className="flex items-center gap-1.5"><Users className="h-4 w-4 text-brand" />Vagas garantidas sem overbooking</span>
@@ -35,8 +35,8 @@ export function CatalogPage() {
                 <h2 className="mt-2 text-2xl font-bold">{featured.title}</h2>
                 <p className="mt-2 text-sm text-white/85">{fmt.period(featured.start_at, featured.end_at)}</p>
                 <div className="mt-8 flex items-end justify-between">
-                  <div className="text-sm text-white/85"><p className="text-3xl font-bold text-white">{featured.sessions_count}</p>sessões</div>
-                  <div className="text-sm text-white/85"><p className="text-3xl font-bold text-white">{featured.total_registered}</p>inscrições</div>
+                  <div className="text-sm text-white/85"><p className="text-3xl font-bold text-white">{featured.sessions_count}</p>{pluralWord(featured.sessions_count, "sessão", "sessões")}</div>
+                  <div className="text-sm text-white/85"><p className="text-3xl font-bold text-white">{featured.total_registered}</p>{pluralWord(featured.total_registered, "inscrição", "inscrições")}</div>
                   <span className="flex items-center gap-1 rounded-full bg-white/15 px-3 py-1.5 text-sm font-medium">Ver programação<ArrowRight className="h-4 w-4" /></span>
                 </div>
               </EventCover>
@@ -73,8 +73,8 @@ export function CatalogPage() {
                       <p className="flex items-center gap-2"><MapPin className="h-4 w-4" /><span className="truncate">{e.location}</span></p>
                     </div>
                     <div className="mt-4 flex items-center justify-between border-t border-border pt-3 text-sm">
-                      <span className="text-subtle">{e.sessions_count} sessões</span>
-                      <span className="font-medium text-brand">{e.total_capacity - e.total_registered} vagas abertas</span>
+                      <span className="text-subtle">{plural(e.sessions_count, "sessão", "sessões")}</span>
+                      <span className="font-medium text-brand">{plural(e.total_capacity - e.total_registered, "vaga aberta", "vagas abertas")}</span>
                     </div>
                   </div>
                 </Card>

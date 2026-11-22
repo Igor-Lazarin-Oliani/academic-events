@@ -57,3 +57,13 @@ export function downloadCsv(filename: string, rows: (string | number)[][]) {
   a.click();
   URL.revokeObjectURL(a.href);
 }
+
+/** Escolhe a forma singular ou plural conforme a quantidade (concordância nominal). */
+export function pluralWord(n: number, singular: string, plural: string) {
+  return Math.abs(n) === 1 ? singular : plural;
+}
+
+/** Quantidade + palavra concordando: plural(1, "inscrito", "inscritos") → "1 inscrito". */
+export function plural(n: number, singular: string, plural: string) {
+  return `${n.toLocaleString("pt-BR")} ${pluralWord(n, singular, plural)}`;
+}

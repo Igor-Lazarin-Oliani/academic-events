@@ -5,7 +5,7 @@ import { BookOpen, ChevronDown, ExternalLink, MessageCircle, Send, Sparkles, X }
 import { api, streamPost } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import type { ChatResult, Evidence, EventSummary, Step } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { cn, plural } from "@/lib/utils";
 import { Button } from "@/components/ui";
 import { Markdown } from "@/components/shared";
 import { ProposalCard } from "./ProposalCard";
@@ -166,7 +166,7 @@ function AssistantMessage({ msg, canInspect }: { msg: Msg; canInspect: boolean }
           <div className="mt-1 flex items-center gap-3 px-1">
             {!!msg.steps?.length && (
               <button className="flex items-center gap-1 text-[11px] text-subtle hover:text-fg" onClick={() => setShowSteps((s) => !s)}>
-                <ChevronDown className={cn("h-3 w-3 transition", showSteps && "rotate-180")} />como cheguei a esta resposta ({msg.steps.filter((s) => s.type === "tool.result").length} consultas)
+                <ChevronDown className={cn("h-3 w-3 transition", showSteps && "rotate-180")} />como cheguei a esta resposta ({plural(msg.steps.filter((s) => s.type === "tool.result").length, "consulta", "consultas")})
               </button>
             )}
             {canInspect && r.run_id && <Link to={`/painel/trajetorias/${r.run_id}`} className="flex items-center gap-1 text-[11px] text-subtle hover:text-fg"><ExternalLink className="h-3 w-3" />trajetória</Link>}
